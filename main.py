@@ -7,7 +7,7 @@ from sql import *
 from typing import Union
 from fastapi import FastAPI, HTTPException, Response
 from pydantic import BaseModel
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, PlainTextResponse
 
 SBIS_KEY = os.environ.get("SBIS_KEY")
 app = FastAPI()
@@ -50,6 +50,10 @@ def get_delivery(adress):
     response = requests.get(url, params=parameters, headers=headers)
 
    
+@app.get('/robots.txt', response_class=PlainTextResponse)
+def robots():
+    data = """User-agent: *\nDisallow: /"""
+    return data
 
 @app.post('/orders/create')
 def create_order(order: Order):
