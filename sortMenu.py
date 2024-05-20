@@ -8,8 +8,8 @@ def get_menu():
     url = 'https://api.sbis.ru/retail/nomenclature/list?'
     parameters = {
         'pointId': 250,
-        'priceListId': 8,
-        "noStopList": True,
+        'priceListId': 25,
+        "noStopList": False,
         'withBalance': True,
         'onlyPublished': False,
         'page': '0',
@@ -37,8 +37,14 @@ def get_dishes(categories_with_ids, nomenclatures):
     
     for dish in nomenclatures:
         for category_id, _ in categories_with_ids:
+            if dish.get("isParent"):
+                continue;
             if dish.get("hierarchicalParent") == category_id:
-                dish_info = (dish['hierarchicalId'], dish['name'], dish.get('cost', 'Unknown'))
+                if dish.get('images') == None:
+                    img = None
+                else: 
+                    img = dish.get('images')[0]
+                dish_info = (dish['id'], dish['name'], dish.get('cost', 'Unknown'), img, dish.get('description_simple', 'None'))
                 dishes_by_category[category_id].append(dish_info)
                 break
     
