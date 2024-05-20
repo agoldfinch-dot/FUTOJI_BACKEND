@@ -19,7 +19,10 @@ def get_menu():
     "X-SBISAccessToken": SBIS_KEY
     }     
     response = requests.get(url, params=parameters, headers=headers)
-    with open("ss.json", "w") as f:
+    with open("menuSbis.json", "w") as f:
+
+        print(response.status_code)
+        print(response.text)
         json.dump(response.json(), f)
     categories = []
     for item in response.json()["nomenclatures"]:

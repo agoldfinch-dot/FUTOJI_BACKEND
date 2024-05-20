@@ -50,10 +50,12 @@ cursor = conn.cursor()
 create_tables(cursor)
 
 
-with open("ss.json", "r") as f:
-    data = json.load(f)
 
 categories_with_ids = get_menu()
+
+with open("menuSbis.json", "r") as f:
+    data = json.load(f)
+
 nomenclatures = data["nomenclatures"]
 
 
