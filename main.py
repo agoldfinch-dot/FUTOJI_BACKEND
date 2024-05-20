@@ -131,12 +131,15 @@ def get_Product_by_name(s: Union[str, None] = None):
 
 @app.get("/images/getById")
 def get_Product_by_id(q: Union[str, None] = None):
-    if os.path.isfile(f"./img/{q}.jpg"):
-        f = open(f"./img/{q}.jpg", "rb")
-        return Response(f.read(), media_type='image/jpeg')
-    link = get_image_by_child_id(q)[0]
+    if os.path.isfile(f"./img/{q}.webp"):
+        f = open(f"./img/{q}.webp", "rb")
+        return Response(f.read(), media_type='image/webp')
+    link = get_image_by_child_id(q)
+    if link == None:
+        raise HTTPException(404,{'data': 'no such photo'})
+    link = link[0]
     headers = {"X-SBISAccessToken": SBIS_KEY} 
     response = requests.get(f"https://api.sbis.ru/retail{link}", headers=headers)
-    with open(f'./img/{q}.jpg', 'wb') as f:
+    with open(f'./img/{q}.webp', 'wb') as f:
         f.write(response.content)
-    return Response(response.content, media_type='image/jpeg')
+    return Response(response.content, media_type='image/webp')
