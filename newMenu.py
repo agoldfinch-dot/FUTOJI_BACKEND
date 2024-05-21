@@ -7,7 +7,9 @@ SBIS_KEY = os.environ.get("SBIS_KEY")
 def create_tables(cursor):
     cursor.execute('''CREATE TABLE IF NOT EXISTS Categories (
                         ParentId INTEGER PRIMARY KEY,
-                        Name TEXT
+                        Name TEXT,
+                        IsMain BOOLEAN,
+                        Parent INTEGER
                     )''')
     cursor.execute('''CREATE TABLE IF NOT EXISTS Dishes (
                         ParentId INTEGER,
@@ -34,9 +36,11 @@ def create_tables(cursor):
                     )''')
 
 def insert_categories(cursor, categories_with_ids):
-
-    for category_id, category_name in categories_with_ids:
-        cursor.execute("INSERT INTO Categories (ParentId, Name) VALUES (?, ?)", (category_id, category_name))
+    for category_id, category_name, parent in categories_with_ids:
+        isMain = True
+        if parent != None:
+            isMain = False
+        cursor.execute("INSERT INTO Categories (ParentId, Name, IsMain, Parent) VALUES (?, ?, ?, ?)", (category_id, category_name, isMain, parent))
 
 def insert_mods(cursor, mods):
 

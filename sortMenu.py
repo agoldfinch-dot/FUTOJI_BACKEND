@@ -24,7 +24,7 @@ def get_menu():
     categories = []
     for item in response.json()["nomenclatures"]:
         if item.get("isParent") and not item.get("isKit"):
-            categories.append((item['hierarchicalId'], item['name']))
+            categories.append((item['hierarchicalId'], item['name'], item.get("hierarchicalParent", None)))
     return categories
 
 # categories_with_ids = get_menu()
@@ -33,13 +33,12 @@ def get_menu():
 
 
 def get_dishes(categories_with_ids, nomenclatures):
-    dishes_by_category = {category_id: [] for category_id, _ in categories_with_ids}
+    dishes_by_category = {category_id: [] for category_id, _, _ in categories_with_ids}
     mods = []
     for dish in nomenclatures:
         if dish.get("isParent") and not dish.get("isKit"):
             continue;
         hasMods = False
-        print(dish.get("name"))
         if len(dish.get("modifiers")) > 0:
             for i in dish.get("modifiers"):
                 if dish.get('isParent'):

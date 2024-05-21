@@ -20,8 +20,13 @@ def get_mods(parent_id):
     cursor.execute("SELECT ChildId, Name, Cost, Image, Ingredients, Description, Mass FROM Mods WHERE ParentId=?", (parent_id,))
     return cursor.fetchall()
 
-def get_all_categories():
-    cursor.execute("SELECT ParentId, Name FROM Categories")
+def get_all_main_categories():
+    cursor.execute("SELECT ParentId, Name FROM Categories WHERE IsMain = 1")
+    categories = cursor.fetchall()
+    return categories
+
+def get_sub_categories(id):
+    cursor.execute("SELECT ParentId, Name FROM Categories WHERE Parent = ?", (id,))
     categories = cursor.fetchall()
     return categories
 

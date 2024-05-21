@@ -84,8 +84,11 @@ def create_order(order: Order):
 @app.get("/categories")
 def get_Categories():
     categories = {'data': []}
-    for i, j in get_all_categories():
-        categories['data'].append({'name': j, 'id':i})
+    for id, name in get_all_main_categories():
+        category = {'name': name, 'id':id, "subCategories": []}
+        for s_id, s_name in get_sub_categories(id):
+            category['subCategories'].append({"id": s_id, "name": s_name})
+        categories['data'].append(category)
     return categories
     
 

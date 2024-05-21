@@ -7,7 +7,7 @@ menu.db
 # C extensions
 *.so
 menuSbis.json
-
+img/
 # Distribution / packaging
 .Python
 build/
