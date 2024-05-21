@@ -6,6 +6,7 @@ test/
 menu.db
 # C extensions
 *.so
+menuSbis.json
 
 # Distribution / packaging
 .Python

@@ -58,9 +58,8 @@ def robots():
 @app.post('/orders/create')
 def create_order(order: Order):
     nomenclature = []
-    for i, j in order.nomenclature:
-        print(i)
-        nomenclature.append({"id": int(i), "count":int(j), "priceListId":25})
+    for i in order.nomenclature:
+        nomenclature.append({"id": int(i['id']), "count":int(i['count']), "priceListId":25, 'modifiers': i.get("modifiers", None)})
 
     adrJ, adrF = get_adress(order.adress)
     headers = {
@@ -73,7 +72,7 @@ def create_order(order: Order):
         'pointId': 250,
         'comment': order.comment,
         'customer': {"name": order.name, "lastname":order.lastName, "phone": order.phone},
-        "datetime": "2024-05-20 20:50:20", # <-------- ЭТО ТОЖЕ НАДО ПОЛУЧАТЬ С МЕТОДА НО МНЕ БЫЛО ПОХ НАДО ИСПРАВИТЬ
+        "datetime": "2024-05-28 15:50:20", # <-------- ЭТО ТОЖЕ НАДО ПОЛУЧАТЬ С МЕТОДА НО МНЕ БЫЛО ПОХ НАДО ИСПРАВИТЬ
         "nomenclatures": nomenclature, # <------- ЭТО ☠️
         "delivery": {"addressFull":adrF, "addressJSON": adrJ, "persons":order.persons,"changeAmount": order.price,"paymentType": order.paymentType, "isPickup": False}
     })
@@ -91,12 +90,18 @@ def get_Categories():
     
 
 @app.get("/categories/getById")
-def get_Category(id: Union[str, None] = None):
-    if id == None: 
+def get_Category(q: Union[str, None] = None):
+    if q == None: 
         raise HTTPException(404,{"error":"No id"})
     category = {'data':[]}
-    for id, name, price, img, ingredients, description, mass in get_dishes_by_parent_id(id):
-        category['data'].append({'id':id, 'name': name, 'price': price, 'image': f'/images/getById?q={id}'if not img == None else None , 'ingredients': ingredients, 'description': description, 'mass': mass})
+    for id, name, price, img, ingredients, description, mass, hasMods in get_dishes_by_parent_id(q):
+        mods = None
+        if hasMods == True:
+            mods = []
+            for m_id, m_name, m_price, m_img, m_ingredients, m_description, m_mass in get_mods(id):
+                mod = {'id': m_id, 'name': m_name, 'price': m_price, 'image': f'/images/getById?q={m_id}' if not img == None else None , 'ingredients': m_ingredients, 'description': m_description, 'mass': m_mass}
+                mods.append(mod)
+        category['data'].append({'id':id, 'name': name, 'price': price, 'image': f'/images/getById?q={id}' if not img == None else None , 'ingredients': ingredients, 'description': description, 'mass': mass, 'hasMods': hasMods, 'mods': mods})
     if category == {'data':[]}:
         raise HTTPException(404,{"error":"No data"})
     return category
@@ -107,7 +112,13 @@ def get_Product_by_id(q: Union[str, None] = None):
     ans = get_dish_info_by_child_id(q)
     if ans == None:
         raise HTTPException(404,{"error": "No such product"})
-    id, name, price, img, ingredients, description, mass = get_dish_info_by_child_id(q)
+    id, name, price, img, ingredients, description, mass, hasMods = get_dish_info_by_child_id(q)
+    mods = None
+    if hasMods == True:
+        mods = []
+        for m_id, m_name, m_price, m_img, m_ingredients, m_description, m_mass in get_mods(id):
+            mod = {'id': m_id, 'name': m_name, 'price': m_price, 'image': f'/images/getById?q={m_id}' if not img == None else None , 'ingredients': m_ingredients, 'description': m_description, 'mass': m_mass}
+            mods.append(mod)
     product['name'] = name
     product['id'] = id
     product['price'] = float(price)
@@ -115,6 +126,8 @@ def get_Product_by_id(q: Union[str, None] = None):
     product['picture'] = f'/images/getById?q={id}' if img != None else None
     product['about'] = description
     product['mass'] = mass
+    product['hasMods'] = hasMods
+    product['mods'] = mods
     return {'data': product}
 
 @app.get("/products/getByName")
@@ -125,8 +138,14 @@ def get_Product_by_name(s: Union[str, None] = None):
     dishesArr = get_dishs_by_name(s)
     if dishesArr == None:
         raise HTTPException(404,{'data': []})
-    for id, name, price, img, ingredients, description, mass in dishesArr:
-        dishes['data'].append({'id':id, 'name': name, 'price': price, 'image': f'/images/getById?q={id}' if not img == None else None , 'ingrediensts': ingredients, 'description': description, 'mass': mass})
+    for id, name, price, img, ingredients, description, mass, hasMods in dishesArr:
+        mods = None
+        if hasMods == True:
+            mods = []
+            for m_id, m_name, m_price, m_img, m_ingredients, m_description, m_mass in get_mods(id):
+                mod = {'id': m_id, 'name': m_name, 'price': m_price, 'image': f'/images/getById?q={m_id}' if not img == None else None , 'ingredients': m_ingredients, 'description': m_description, 'mass': m_mass}
+                mods.append(mod)
+        dishes['data'].append({'id':id, 'name': name, 'price': price, 'image': f'/images/getById?q={id}' if not img == None else None , 'ingrediensts': ingredients, 'description': description, 'mass': mass, "hasMods": hasMods, "mods": mods})
     return dishes
 
 @app.get("/images/getById")
