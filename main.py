@@ -91,6 +91,17 @@ def get_Categories():
         categories['data'].append(category)
     return categories
     
+@app.get("/subCategories")
+def get_sub_category(q: Union[str, None] = None):
+    if q == None: 
+        raise HTTPException(404,{"error":"No id"})
+    sub_category = []
+    subArr = get_sub_categories(q)
+    if subArr == []:
+        raise HTTPException(404, {"error": "No subcategories by this id"})
+    for s_id, s_name in subArr:
+        sub_category.append({"id": s_id, "name": s_name})
+    return {'data': sub_category}
 
 @app.get("/categories/getById")
 def get_Category(q: Union[str, None] = None):
