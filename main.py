@@ -6,11 +6,24 @@ import requests
 from sql import *
 from typing import Union
 from fastapi import FastAPI, HTTPException, Response
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
 from fastapi.responses import FileResponse, PlainTextResponse
 
 SBIS_KEY = os.environ.get("SBIS_KEY")
 app = FastAPI()
+
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class Order(BaseModel):
     name: str
@@ -94,7 +107,7 @@ def get_Categories():
 @app.get("/subCategories")
 def get_sub_category(q: Union[str, None] = None):
     if q == None: 
-        raise HTTPException(404,{"error":"No id"})
+        raise HTTPException(404, {"error":"No id"})
     sub_category = []
     subArr = get_sub_categories(q)
     if subArr == []:
