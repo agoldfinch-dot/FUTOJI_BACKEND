@@ -41,6 +41,6 @@ def get_dishs_by_name(name):
     nameCapitalized = f'%{name.capitalize()}%'
     nameLower = f'%{name.lower()}%'
     nameLowerAndCapitalized = f'%{name.lower().capitalize()}%'
-    cursor.execute("SELECT ChildId, Name, Cost, Image, Ingredients, Description, Mass, hasMods FROM Dishes WHERE Name LIKE ? OR Name LIKE ? OR Name LIKE ?", (nameCapitalized,nameLower, nameLowerAndCapitalized))
+    cursor.execute("SELECT ChildId, Name, Cost, Image, Ingredients, Description, Mass, hasMods, ParentId FROM Dishes WHERE Name LIKE ? OR Name LIKE ? OR Name LIKE ?", (nameCapitalized,nameLower, nameLowerAndCapitalized))
     dish_info = cursor.fetchall()
     return dish_info if dish_info else None

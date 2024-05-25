@@ -148,6 +148,7 @@ def get_Product_by_id(q: Union[str, None] = None):
             mods.append(mod)
     product['name'] = name
     product['id'] = id
+    product['categoryId'] = q
     product['price'] = float(price)
     product['ingredients'] = ingredients
     product['picture'] = f'/images/getById?q={id}' if img != None else None
@@ -165,14 +166,14 @@ def get_Product_by_name(s: Union[str, None] = None):
     dishesArr = get_dishs_by_name(s)
     if dishesArr == None:
         raise HTTPException(404,{'data': []})
-    for id, name, price, img, ingredients, description, mass, hasMods in dishesArr:
+    for id, name, price, img, ingredients, description, mass, hasMods, parentId in dishesArr:
         mods = None
         if hasMods == True:
             mods = []
             for m_id, m_name, m_price, m_img, m_ingredients, m_description, m_mass in get_mods(id):
                 mod = {'id': m_id, 'name': m_name, 'price': m_price, 'image': f'/images/getById?q={m_id}' if not img == None else None , 'ingredients': m_ingredients, 'description': m_description, 'mass': m_mass}
                 mods.append(mod)
-        dishes['data'].append({'id':id, 'name': name, 'price': price, 'image': f'/images/getById?q={id}' if not img == None else None , 'ingrediensts': ingredients, 'description': description, 'mass': mass, "hasMods": hasMods, "mods": mods})
+        dishes['data'].append({'id':id, "categoryId": parentId, 'name': name, 'price': price, 'image': f'/images/getById?q={id}' if not img == None else None , 'ingrediensts': ingredients, 'description': description, 'mass': mass, "hasMods": hasMods, "mods": mods})
     return dishes
 
 @app.get("/images/getById")
