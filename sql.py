@@ -32,7 +32,7 @@ def get_sub_categories(id):
 
 def get_dish_info_by_child_id(child_id):
     """Получает название и цену блюда по его ChildId из таблицы Dishes."""
-    cursor.execute("SELECT ChildId, Name, Cost, Image, Ingredients, Description, Mass, hasMods FROM Dishes WHERE ChildId=?", (child_id,))
+    cursor.execute("SELECT ChildId, Name, Cost, Image, Ingredients, Description, Mass, hasMods, ParentId FROM Dishes WHERE ChildId=?", (child_id,))
     dish_info = cursor.fetchone()
     return dish_info if dish_info else None
 

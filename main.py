@@ -139,7 +139,7 @@ def get_Product_by_id(q: Union[str, None] = None):
     ans = get_dish_info_by_child_id(q)
     if ans == None:
         raise HTTPException(404,{"error": "No such product"})
-    id, name, price, img, ingredients, description, mass, hasMods = get_dish_info_by_child_id(q)
+    id, name, price, img, ingredients, description, mass, hasMods, parentId = get_dish_info_by_child_id(q)
     mods = None
     if hasMods == True:
         mods = []
@@ -148,7 +148,7 @@ def get_Product_by_id(q: Union[str, None] = None):
             mods.append(mod)
     product['name'] = name
     product['id'] = id
-    product['categoryId'] = q
+    product['categoryId'] = parentId
     product['price'] = float(price)
     product['ingredients'] = ingredients
     product['picture'] = f'/images/getById?q={id}' if img != None else None
