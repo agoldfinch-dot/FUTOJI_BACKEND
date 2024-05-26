@@ -4,7 +4,7 @@ import os
 conn = pymysql.connect(
     host='localhost',
     user='menuHolder',
-    password=os.environ.get("SBIS_KEY"),
+    password=os.environ.get("SQL_PASS"),
     database='menu',  
     port=2666,
     charset='utf8mb4',
