@@ -3,7 +3,7 @@ import random
 import json
 import requests
 
-from sql import *
+from mysql import *
 from typing import Union
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
