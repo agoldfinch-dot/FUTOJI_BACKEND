@@ -28,16 +28,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
     
-async def exit_app():
-    loop = asyncio.get_running_loop()
-    loop.stop()
-    
-@app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(request, exc):
-    task = BackgroundTask(exit_app)
-    return PlainTextResponse("sorry smth went wrong restarting", status_code=500, background=task)
-
-
 class Order(BaseModel):
     name: str
     lastName: Union[str, None] = None
