@@ -1,6 +1,7 @@
 import os
 import random
 import json
+import asyncio
 import requests
 
 from mysql import *
@@ -9,6 +10,8 @@ from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.background import BackgroundTask
 from fastapi.responses import FileResponse, PlainTextResponse
 
 SBIS_KEY = os.environ.get("SBIS_KEY")
@@ -24,6 +27,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+    
+async def exit_app():
+    loop = asyncio.get_running_loop()
+    loop.stop()
+    
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request, exc):
+    task = BackgroundTask(exit_app)
+    return PlainTextResponse("sorry smth went wrong restarting", status_code=500, background=task)
+
 
 class Order(BaseModel):
     name: str

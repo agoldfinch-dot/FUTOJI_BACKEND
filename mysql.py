@@ -12,7 +12,7 @@ conn = pymysql.connect(
 )
 
 def get_con():
-    conn = pymysql.connect(
+    return pymysql.connect(
         host='localhost',
         user='menuHolder',
         password=os.environ.get("SQL_PASS"),
@@ -21,7 +21,6 @@ def get_con():
         charset='utf8mb4',
         cursorclass=pymysql.cursors.DictCursor
     )
-    return conn
 
 
 
