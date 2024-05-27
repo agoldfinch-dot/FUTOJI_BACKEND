@@ -1,7 +1,6 @@
 import pymysql
 import json
 import os
-import requests
 from sortMenu import get_menu, get_dishes
 
 SBIS_KEY = os.environ.get("SBIS_KEY")
@@ -18,7 +17,7 @@ def create_tables(cursor):
                         ChildId INT PRIMARY KEY,
                         Name VARCHAR(255),
                         Cost VARCHAR(255),
-                        Image LONGTEXT,
+                        Image VARCHAR(1024),
                         Ingredients TEXT,
                         Description TEXT,
                         Mass VARCHAR(255),
@@ -34,7 +33,7 @@ def create_tables(cursor):
                         ChildId INT,
                         Name VARCHAR(255),
                         Cost VARCHAR(255),
-                        Image TEXT,  -- Изменение типа данных на TEXT
+                        Image VARCHAR(1024),  -- Изменение типа данных на TEXT
                         Ingredients TEXT,
                         Description TEXT,
                         Mass VARCHAR(255),
@@ -60,7 +59,7 @@ def insert_mods(cursor, mods):
         # Проверка существования ParentId в Dishes перед вставкой
         cursor.execute("SELECT ChildId FROM Dishes WHERE ChildId = %s", (parent_id,))
         if cursor.fetchone():
-            cursor.execute("INSERT INTO Mods (ParentId, ChildId, Name, Cost, Image, Description, Ingredients, Mass) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+            cursor.execute(f"INSERT INTO Mods (ParentId, ChildId, Name, Cost, Image, Description, Ingredients, Mass) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                            (parent_id, dish_id, dish_name, dish_cost, dish_image, description, ingredients, mass))
         else:
             print(f"Пропуск модификации с ParentId {parent_id}, так как он не существует в Dishes")
@@ -75,11 +74,9 @@ def insert_dishes(cursor, dishes_by_category):
                 ingredients, description, mass = temp
             else:
                 ingredients = description = mass = None
-            
-            dish_image_first_chars = dish_image[:255] if dish_image else None
 
             cursor.execute("INSERT INTO Dishes (ParentId, ChildId, Name, Cost, Image, Description, Ingredients, Mass, HasMods) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                           (parent_id, dish_id, dish_name, dish_cost, dish_image_first_chars, description, ingredients, mass, hasMods))
+                           (parent_id, dish_id, dish_name, dish_cost, dish_image, description, ingredients, mass, hasMods))
 
 # Подключение к базе данных
 conn = pymysql.connect(

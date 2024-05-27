@@ -97,38 +97,38 @@ def create_order(order: Order):
 @app.get("/categories")
 def get_Categories():
     categories = {'data': []}
-    for id, name in get_all_main_categories():
-        category = {'name': name, 'id':id, "subCategories": []}
-        for s_id, s_name in get_sub_categories(id):
-            category['subCategories'].append({"id": s_id, "name": s_name})
+    for category in get_all_main_categories():
+        category = {'name': category['Name'], 'id': category['ParentId'], "subCategories": []}
         categories['data'].append(category)
     return categories
     
-@app.get("/subCategories")
-def get_sub_category(q: Union[str, None] = None):
-    if q == None: 
-        raise HTTPException(404, {"error":"No id"})
-    sub_category = []
-    subArr = get_sub_categories(q)
-    if subArr == []:
-        raise HTTPException(404, {"error": "No subcategories by this id"})
-    for s_id, s_name in subArr:
-        sub_category.append({"id": s_id, "name": s_name})
-    return {'data': sub_category}
+# @app.get("/subCategories")
+# def get_sub_category(q: Union[str, None] = None):
+#     if q == None: 
+#         raise HTTPException(404, {"error":"No id"})
+#     sub_category = []
+#     subArr = get_sub_categories(q)
+#     if subArr == []:
+#         raise HTTPException(404, {"error": "No subcategories by this id"})
+#     for s_id, s_name in subArr:
+#         sub_category.append({"id": s_id, "name": s_name})
+#     return {'data': sub_category}
 
 @app.get("/categories/getById")
 def get_Category(q: Union[str, None] = None):
     if q == None: 
         raise HTTPException(404,{"error":"No id"})
     category = {'data':[]}
-    for id, name, price, img, ingredients, description, mass, hasMods in get_dishes_by_parent_id(q):
+    for product in get_dishes_by_parent_id(q):
         mods = None
-        if hasMods == True:
+        if product['hasMods'] == True:
             mods = []
-            for m_id, m_name, m_price, m_img, m_ingredients, m_description, m_mass in get_mods(id):
-                mod = {'id': m_id, 'name': m_name, 'price': m_price, 'image': f'/images/getById?q={m_id}' if not img == None else None , 'ingredients': m_ingredients, 'description': m_description, 'mass': m_mass}
+            for modi in get_mods(product['ChildId']):
+                #ChildId, Name, Cost, Image, Ingredients, Description, Mass
+                mod = {'id': modi['ChildId'], 'name': modi['Name'], 'price': modi['Cost'], 'image': f'/images/getById?q={modi["ChildId"]}' if not modi['img'] == None else None , 'ingredients': modi['Ingredients'], 'description': modi['Description'], 'mass': modi['Mass']}
                 mods.append(mod)
-        category['data'].append({'id':id, 'name': name, 'price': price, 'image': f'/images/getById?q={id}' if not img == None else None , 'ingredients': ingredients, 'description': description, 'mass': mass, 'hasMods': hasMods, 'mods': mods})
+        #ChildId, Name, Cost, Image, Ingredients, Description, Mass, hasMods        
+        category['data'].append({'id': product['ChildId'], 'name': product['Name'], 'price': product['Cost'], 'image': f'/images/getById?q={product["ChildId"]}' if not product['Image'] == None else None , 'ingredients': product['Ingredients'], 'description': product['Description'], 'mass': product['Mass'], 'hasMods': product['hasMods'], 'mods': mods})
     if category == {'data':[]}:
         raise HTTPException(404,{"error":"No data"})
     return category
@@ -139,22 +139,22 @@ def get_Product_by_id(q: Union[str, None] = None):
     ans = get_dish_info_by_child_id(q)
     if ans == None:
         raise HTTPException(404,{"error": "No such product"})
-    id, name, price, img, ingredients, description, mass, hasMods, parentId = get_dish_info_by_child_id(q)
+    products = get_dish_info_by_child_id(q)
     mods = None
-    if hasMods == True:
+    if products['hasMods'] == True:
         mods = []
-        for m_id, m_name, m_price, m_img, m_ingredients, m_description, m_mass in get_mods(id):
-            mod = {'id': m_id, 'name': m_name, 'price': m_price, 'image': f'/images/getById?q={m_id}' if not img == None else None , 'ingredients': m_ingredients, 'description': m_description, 'mass': m_mass}
+        for modi in get_mods(products['ChildId']):
+            mod = {'id': modi['ChildId'], 'name': modi['Name'], 'price': modi['Cost'], 'image': f'/images/getById?q={modi["ChildId"]}' if not modi['img'] == None else None , 'ingredients': modi['Ingredients'], 'description': modi['Description'], 'mass': modi['Mass']}
             mods.append(mod)
-    product['name'] = name
-    product['id'] = id
-    product['categoryId'] = parentId
-    product['price'] = float(price)
-    product['ingredients'] = ingredients
-    product['picture'] = f'/images/getById?q={id}' if img != None else None
-    product['about'] = description
-    product['mass'] = mass
-    product['hasMods'] = hasMods
+    product['name'] = products['Name']
+    product['id'] = products['ChildId']
+    product['categoryId'] = products['ParentId']
+    product['price'] = products['Cost']
+    product['ingredients'] = products['Ingredients']
+    product['picture'] = f'/images/getById?q={products["ChildId"]}' if products['Image'] != None else None
+    product['about'] = products['Description']
+    product['mass'] = products['Mass']
+    product['hasMods'] = products['hasMods']
     product['mods'] = mods
     return {'data': product}
 
@@ -166,14 +166,14 @@ def get_Product_by_name(s: Union[str, None] = None):
     dishesArr = get_dishs_by_name(s)
     if dishesArr == None:
         raise HTTPException(404,{'data': []})
-    for id, name, price, img, ingredients, description, mass, hasMods, parentId in dishesArr:
+    for product in dishesArr:
         mods = None
-        if hasMods == True:
+        if product['hasMods'] == True:
             mods = []
-            for m_id, m_name, m_price, m_img, m_ingredients, m_description, m_mass in get_mods(id):
-                mod = {'id': m_id, 'name': m_name, 'price': m_price, 'image': f'/images/getById?q={m_id}' if not img == None else None , 'ingredients': m_ingredients, 'description': m_description, 'mass': m_mass}
+            for modi in get_mods(id):
+                mod = {'id': modi['ChildId'], 'name': modi['Name'], 'price': modi['Cost'], 'image': f'/images/getById?q={modi["ChildId"]}' if not modi['img'] == None else None , 'ingredients': modi['Ingredients'], 'description': modi['Description'], 'mass': modi['Mass']}
                 mods.append(mod)
-        dishes['data'].append({'id':id, "categoryId": parentId, 'name': name, 'price': price, 'image': f'/images/getById?q={id}' if not img == None else None , 'ingrediensts': ingredients, 'description': description, 'mass': mass, "hasMods": hasMods, "mods": mods})
+        dishes['data'].append({'id': product['ChildId'], 'name': product['Name'], 'price': product['Cost'], 'image': f'/images/getById?q={product["ChildId"]}' if not product['Image'] == None else None , 'ingredients': product['Ingredients'], 'description': product['Description'], 'mass': product['Mass'], 'hasMods': product['hasMods'], 'mods': mods})
     return dishes
 
 @app.get("/images/getById")
@@ -184,9 +184,10 @@ def get_Product_by_id(q: Union[str, None] = None):
     link = get_image_by_child_id(q)
     if link == None:
         raise HTTPException(404,{'data': 'no such photo'})
-    link = link[0]
+    link = link['Image']
     headers = {"X-SBISAccessToken": SBIS_KEY} 
     response = requests.get(f"https://api.sbis.ru/retail{link}", headers=headers)
+    print(response.text)
     with open(f'./img/{q}.webp', 'wb') as f:
         f.write(response.content)
     return Response(response.content, media_type='image/webp')
