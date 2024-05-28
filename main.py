@@ -1,7 +1,6 @@
 import os
-import random
 import json
-import asyncio
+import datetime
 import requests
 
 from mysql import *
@@ -31,13 +30,16 @@ app.add_middleware(
 class Order(BaseModel):
     name: str
     lastName: Union[str, None] = None
-    price: float = None
+    changeAmount: float = None
     phone: str
+    time: str = "now"
     nomenclature: list
     comment: Union[str, None] = None
     adress: str
     persons: int = 1
     paymentType: str 
+    source: int = 1
+    promo: str = None
 
 def get_adress(adress):
     headers = {
@@ -51,7 +53,7 @@ def get_adress(adress):
     response = requests.get(url, params=parameters, headers=headers)
 
     adrJ = response.json()["addresses"][0]["addressJSON"]
-    adrF = str(response.json()["addresses"][0]["addressFull"])
+    adrF = response.json()["addresses"][0]["addressFull"]
     return adrJ, adrF
 
 def get_delivery(adress):
@@ -66,12 +68,12 @@ def get_delivery(adress):
     response = requests.get(url, params=parameters, headers=headers)
 
    
-@app.get('/robots.txt', response_class=PlainTextResponse)
+@app.get('/robots.txt', response_class=PlainTextResponse, tags=['robots'])
 def robots():
     data = """User-agent: *\nDisallow: /"""
     return data
 
-@app.post('/orders/create')
+@app.post('/orders/create', tags=['orders'])
 def create_order(order: Order):
     nomenclature = []
     for i in order.nomenclature:
@@ -82,22 +84,36 @@ def create_order(order: Order):
         "X-SBISAccessToken": SBIS_KEY,
         'Content-Type': 'application/json'
     }  
-
+    now = datetime.datetime.now()
+    date = now.date()
+    if order.time == "now":
+        hour = now.hour
+        minute = now.minute
+    else:
+        _time = order.time.split(':')
+        hour = int(_time[0])
+        minute = int(_time[1])
+    if hour * 60 + minute >= 1380:
+        raise HTTPException(400,{'data': 'we are close'})
+    if hour * 60 + minute < 600:
+        hour = 10
+    promos = {"Люблю Санечку": "Svoyak backend", "День Рождения": "HB backend"}
     parameters = json.dumps({
         'product': 'delivery',
         'pointId': 250,
-        'comment': order.comment,
+        "promocode": promos.get(order.promo, None),
+        'comment': f'{order.comment}\n{order.adress}',
         'customer': {"name": order.name, "lastname":order.lastName, "phone": order.phone},
-        "datetime": "2024-05-28 15:50:20", # <-------- ЭТО ТОЖЕ НАДО ПОЛУЧАТЬ С МЕТОДА НО МНЕ БЫЛО ПОХ НАДО ИСПРАВИТЬ
-        "nomenclatures": nomenclature, # <------- ЭТО ☠️
-        "delivery": {"addressFull":adrF, "addressJSON": adrJ, "persons":order.persons,"changeAmount": order.price,"paymentType": order.paymentType, "isPickup": False}
+        "datetime": f"{date} {hour}:{minute}:00", 
+        "nomenclatures": nomenclature,
+        "delivery": {"addressFull":adrF, "addressJSON": adrJ, "persons":order.persons,"changeAmount": order.changeAmount,"paymentType": order.paymentType, "isPickup": False}
     })
     url = 'https://api.sbis.ru/retail/order/create'  
     response = requests.post(url, data=parameters, headers=headers)
     return response.json()
 
 
-@app.get("/categories")
+@app.get("/categories", tags=['categories'])
 def get_Categories():
     categories = {'data': []}
     for category in get_all_main_categories():
@@ -117,7 +133,7 @@ def get_Categories():
 #         sub_category.append({"id": s_id, "name": s_name})
 #     return {'data': sub_category}
 
-@app.get("/categories/getById")
+@app.get("/categories/getById", tags=['categories'])
 def get_Category(q: Union[str, None] = None):
     if q == None: 
         raise HTTPException(404,{"error":"No id"})
@@ -136,13 +152,22 @@ def get_Category(q: Union[str, None] = None):
         raise HTTPException(404,{"error":"No data"})
     return category
 
-@app.get("/products/getById")
+@app.get("/products/getMods", tags=['products'])
+def get_Product_by_id(q: Union[str, None] = None):
+    mods = []
+    ans = get_mods(q)
+    if ans == None:
+        raise HTTPException(404,{"error": "no mods"})
+    for mod in ans:
+        mods.append({'id': mod['ChildId'], 'name': mod['Name'], 'price': mod['Cost'], 'image': f'/images/getById?q={mod["ChildId"]}' if not mod['Image'] == None else None , 'ingredients': mod['Ingredients'], 'description': mod['Description'], 'mass': mod['Mass']})
+    return mods
+
+@app.get("/products/getById", tags=['products'])
 def get_Product_by_id(q: Union[str, None] = None):
     product = {}
-    ans = get_dish_info_by_child_id(q)
-    if ans == None:
-        raise HTTPException(404,{"error": "No such product"})
     products = get_dish_info_by_child_id(q)
+    if products == None:
+        raise HTTPException(404,{"error": "No such product"})
     mods = None
     if products['hasMods'] == True:
         mods = []
@@ -161,7 +186,7 @@ def get_Product_by_id(q: Union[str, None] = None):
     product['mods'] = mods
     return {'data': product}
 
-@app.get("/products/getByName")
+@app.get("/products/getByName", tags=['products'])
 def get_Product_by_name(s: Union[str, None] = None):
     if s == None: 
         raise HTTPException(404,{"error":"No search params"})
@@ -179,7 +204,7 @@ def get_Product_by_name(s: Union[str, None] = None):
         dishes['data'].append({'id': product['ChildId'], 'name': product['Name'], 'price': product['Cost'], 'image': f'/images/getById?q={product["ChildId"]}' if not product['Image'] == None else None , 'ingredients': product['Ingredients'], 'description': product['Description'], 'mass': product['Mass'], 'hasMods': product['hasMods'], 'mods': mods})
     return dishes
 
-@app.get("/images/getById")
+@app.get("/images/getById", tags=['images'])
 def get_Product_by_id(q: Union[str, None] = None):
     if os.path.isfile(f"./img/{q}.webp"):
         f = open(f"./img/{q}.webp", "rb")

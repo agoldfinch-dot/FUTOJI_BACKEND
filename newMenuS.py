@@ -80,9 +80,9 @@ def insert_dishes(cursor, dishes_by_category):
 
 # Подключение к базе данных
 conn = pymysql.connect(
-    host='localhost',
+    host=os.environ.get("SQL_HOST"),
     user='menuHolder',
-    password= os.environ.get("SQL_PASS"),
+    password=os.environ.get("SQL_PASS"),
     database='menu',  
     port=2666,
     charset='utf8mb4',

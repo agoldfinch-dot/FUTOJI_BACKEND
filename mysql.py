@@ -1,19 +1,9 @@
 import pymysql
 import os
 
-conn = pymysql.connect(
-    host='localhost',
-    user='menuHolder',
-    password=os.environ.get("SQL_PASS"),
-    database='menu',  
-    port=2666,
-    charset='utf8mb4',
-    cursorclass=pymysql.cursors.DictCursor
-)
-
 def get_con():
     return pymysql.connect(
-        host='localhost',
+        host=os.environ.get("SQL_HOST"),
         user='menuHolder',
         password=os.environ.get("SQL_PASS"),
         database='menu',  
