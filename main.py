@@ -110,6 +110,11 @@ def create_order(order: Order):
     })
     url = 'https://api.sbis.ru/retail/order/create'  
     response = requests.post(url, data=parameters, headers=headers)
+
+    ss = response.json()['saleKey']
+    url = f"https://api.sbis.ru/retail/order/{ss}/cancel"
+    cancel = requests.put(url, headers=headers)
+
     return response.json()
 
 

@@ -5,6 +5,22 @@ from sortMenu import get_menu, get_dishes
 
 SBIS_KEY = os.environ.get("SBIS_KEY")
 
+def drop_backup_tables(cursor):
+    cursor.execute('''DROP TABLE IF EXISTS menuBackup.Dishes, menuBackup.Categories, menuBackup.Mods;''')
+    
+def create_backup_tables(cursor):
+    cursor.execute('''CREATE TABLE menuBackup.Dishes SELECT * FROM menu.Dishes;''')
+    cursor.execute('''CREATE TABLE menuBackup.Categories SELECT * FROM menu.Categories;''')
+    cursor.execute('''CREATE TABLE menuBackup.Mods SELECT * FROM menu.Mods;''')
+
+def create_from_backup(cursor):
+    cursor.execute('''CREATE TABLE menu.Dishes SELECT * FROM menuBackup.Dishes;''')
+    cursor.execute('''CREATE TABLE menu.Categories SELECT * FROM menuBackup.Categories;''')
+    cursor.execute('''CREATE TABLE menu.Mods SELECT * FROM menuBackup.Mods;''')
+
+def drop_database(cursor):
+    cursor.execute('''DROP TABLE IF EXISTS menu.Dishes, menu.Categories, menu.Mods;''')
+
 def create_tables(cursor):
     cursor.execute('''CREATE TABLE IF NOT EXISTS Categories (
                         ParentId INT PRIMARY KEY,
@@ -83,33 +99,69 @@ conn = pymysql.connect(
     host=os.environ.get("SQL_HOST"),
     user='menuHolder',
     password=os.environ.get("SQL_PASS"),
-    database='menu',  
     port=2666,
     charset='utf8mb4',
     cursorclass=pymysql.cursors.DictCursor
 )
 cursor = conn.cursor()
 
-# Создание таблиц
-create_tables(cursor)
 
-# Получение категорий
-categories_with_ids = get_menu()
 
-# Загрузка данных из файла
-with open("menuSbis.json", "r") as f:
-    data = json.load(f)
+drop_backup_tables(cursor)
 
-nomenclatures = data["nomenclatures"]
+create_backup_tables(cursor)
 
-# Получение блюд и модификаций
-dishes_by_category, mods = get_dishes(categories_with_ids, nomenclatures)
-
-# Вставка данных в таблицы
-insert_categories(cursor, categories_with_ids)
-insert_dishes(cursor, dishes_by_category)  # Вставка блюд перед модификациями
-insert_mods(cursor, mods)
-
-# Фиксация изменений и закрытие соединения
 conn.commit()
 conn.close()
+
+try:
+    conn = pymysql.connect(
+        host=os.environ.get("SQL_HOST"),
+        user='menuHolder',
+        password=os.environ.get("SQL_PASS"),
+        database='menu',  
+        port=2666,
+        charset='utf8mb4',
+        cursorclass=pymysql.cursors.DictCursor
+    )
+    cursor = conn.cursor()
+    
+    drop_database(cursor)
+    # Создание таблиц
+    create_tables(cursor)
+    # Получение категорий
+    categories_with_ids = get_menu()
+
+    # Загрузка данных из файла
+    with open("menuSbis.json", "r") as f:
+        data = json.load(f)
+
+    nomenclatures = data["nomenclatures"]
+
+    # Получение блюд и модификаций
+    dishes_by_category, mods = get_dishes(categories_with_ids, nomenclatures)
+
+    # Вставка данных в таблицы
+    insert_categories(cursor, categories_with_ids)
+    insert_dishes(cursor, dishes_by_category)  # Вставка блюд перед модификациями
+    insert_mods(cursor, mods)
+
+    # Фиксация изменений и закрытие соединения
+    conn.commit()
+    conn.close()
+
+except Exception:
+    print('back')
+    conn = pymysql.connect(
+    host=os.environ.get("SQL_HOST"),
+    user='menuHolder',
+    password=os.environ.get("SQL_PASS"),
+    port=2666,
+    charset='utf8mb4',
+    cursorclass=pymysql.cursors.DictCursor
+    )
+    cursor = conn.cursor()
+
+    drop_database(cursor)
+    
+    create_from_backup(cursor)
