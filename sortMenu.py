@@ -10,8 +10,7 @@ def get_menu():
         'pointId': 250,
         'priceListId': 25,
         "noStopList": True,
-        'withBalance': True,
-        'onlyPublished': True,
+        'onlyPublished': False,
         'page': '0',
         'pageSize': '1000'
     }
