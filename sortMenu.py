@@ -9,9 +9,9 @@ def get_menu():
     parameters = {
         'pointId': 250,
         'priceListId': 25,
-        "noStopList": False,
+        "noStopList": True,
         'withBalance': True,
-        'onlyPublished': False,
+        'onlyPublished': True,
         'page': '0',
         'pageSize': '1000'
     }
