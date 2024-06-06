@@ -88,12 +88,12 @@ def create_order(order: Order):
     date = now.date()
     if order.time == "now":
         hour = now.hour
-        minute = now.minute + 30
+        minute = now.minute + 2
     else:
         _time = order.time.split(':')
         hour = int(_time[0])
         minute = int(_time[1])
-    if hour * 60 + minute >= 1380:
+    if hour * 60 + minute >= 1382:
         raise HTTPException(400,{'data': 'we are close'})
     if hour * 60 + minute < 600:
         hour = 10
