@@ -88,7 +88,7 @@ def create_order(order: Order):
     date = now.date()
     if order.time == "now":
         hour = now.hour
-        minute = now.minute
+        minute = now.minute + 30
     else:
         _time = order.time.split(':')
         hour = int(_time[0])
@@ -110,10 +110,9 @@ def create_order(order: Order):
     })
     url = 'https://api.sbis.ru/retail/order/create'  
     response = requests.post(url, data=parameters, headers=headers)
-
-    # ss = response.json()['saleKey']
-    # url = f"https://api.sbis.ru/retail/order/{ss}/cancel"
-    # cancel = requests.put(url, headers=headers)
+    ss = response.json()['saleKey']
+    url = f"https://api.sbis.ru/retail/order/{ss}/cancel"
+    cancel = requests.put(url, headers=headers)
 
     return response.json()
 
