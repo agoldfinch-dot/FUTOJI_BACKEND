@@ -40,6 +40,10 @@ class Order(BaseModel):
     paymentType: str 
     source: int = 1
     promo: str = None
+    
+class Orders(BaseModel):
+    firstDate: Union[str, None] = None;
+    secondDate: Union[str, None] = None;
 
 def get_adress(adress):
     headers = {
@@ -223,3 +227,74 @@ def get_Product_by_id(q: Union[str, None] = None):
     with open(f'./img/{q}.webp', 'wb') as f:
         f.write(response.content)
     return Response(response.content, media_type='image/webp')
+
+def orders_process(ordersJson):
+    response = {
+        'data': 
+        {
+            'amount': 0,
+            'total': 0
+        }
+    }
+    for order in ordersJson['orders']:
+        if order['Deleted'] or order['Return'] or order['TotalPrice'] == None:
+            continue;
+        response['data']['total'] += order['TotalPrice']
+        response['data']['amount'] += 1
+
+    return response
+
+
+@app.post('/orders/get', tags=['orders'])
+def get_orders(orders: Orders):
+    headers = {
+        "X-SBISAccessToken": SBIS_KEY,
+    }  
+    parameters = {
+    "pointId": 250,
+    "fromDateTime": orders.firstDate + " 00:00:00",
+    "toDateTime": orders.secondDate + ' 00:00:00',
+    "pageSize": 1000
+    }
+    url = "https://api.sbis.ru/retail/order/list?"
+
+    response = requests.get(url, params=parameters, headers=headers)
+
+    return orders_process(response.json())
+
+@app.get('/orders/get/yesterday', tags=['orders'])
+def get_orders():
+    headers = {
+        "X-SBISAccessToken": SBIS_KEY,
+    }  
+    now = datetime.datetime.now()
+    date = now.date()
+    parameters = {
+    "pointId": 250,
+    "fromDateTime": f"{date.year}-{date.month if date.month // 10 >= 1 else '0' + str(date.month)}-{date.day - 1 if (date.day - 1) // 10 >= 1 else '0' + str(date.day - 1)}" + " 00:00:00",
+    "toDateTime":  f"{date.year}-{date.month if date.month // 10 >= 1 else '0' + str(date.month)}-{date.day if date.day // 10 >= 1 else '0' + str(date.day)}" + " 00:00:00",
+    "pageSize": 1000
+    }
+    url = "https://api.sbis.ru/retail/order/list?"
+
+    response = requests.get(url, params=parameters, headers=headers)
+    return orders_process(response.json())
+
+@app.get('/orders/get/today', tags=['orders'])
+def get_orders():
+    headers = {
+        "X-SBISAccessToken": SBIS_KEY,
+    }  
+    now = datetime.datetime.now()
+    date = now.date()
+    today = f"{date.year}-{date.month if date.month // 10 >= 1 else '0' + str(date.month)}-{date.day if date.day // 10 >= 1 else '0' + str(date.day)}"
+    parameters = {
+    "pointId": 250,
+    "fromDateTime":  today + " 00:00:00",
+    "toDateTime":  today + f" {now.hour}:{now.minute}:00",
+    "pageSize": 1000
+    }
+    url = "https://api.sbis.ru/retail/order/list?"
+
+    response = requests.get(url, params=parameters, headers=headers)
+    return orders_process(response.json())
