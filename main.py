@@ -2,6 +2,7 @@ import os
 import json
 import datetime
 import requests
+import telebot
 
 from mysql import *
 from typing import Union
@@ -9,13 +10,11 @@ from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.background import BackgroundTask
 from fastapi.responses import FileResponse, PlainTextResponse
 
 SBIS_KEY = os.environ.get("SBIS_KEY")
 app = FastAPI()
-
+bot = telebot.TeleBot(os.environ.get('TG_KEY'))
 
 origins = ["*"]
 
@@ -114,10 +113,14 @@ def create_order(order: Order):
     })
     url = 'https://api.sbis.ru/retail/order/create'  
     response = requests.post(url, data=parameters, headers=headers)
-    ss = response.json()['saleKey']
-    url = f"https://api.sbis.ru/retail/order/{ss}/cancel"
-    cancel = requests.put(url, headers=headers)
+    if response.status_code != 200:
+        raise HTTPException(400, response.json())
+    
+    responseJson = response.json()
+    bot.send_message(-1002031748319, f"Новый заказ!!!\n{responseJson['customer']['name']}\n{responseJson['customer']['phone']}\n{order.adress}\n{responseJson['totalPrice']}")
 
+    url = f"https://api.sbis.ru/retail/order/{responseJson['saleKey']}/cancel"
+    requests.put(url, headers=headers)
     return response.json()
 
 
