@@ -262,6 +262,25 @@ def get_orders(orders: Orders):
 
     return orders_process(response.json())
 
+
+@app.get('/orders/get', response_class=PlainTextResponse, tags=['orders'])
+def get_orders(date: Union[str, None] = None):
+    headers = {
+        "X-SBISAccessToken": SBIS_KEY,
+    }  
+    parameters = {
+    "pointId": 250,
+    "fromDateTime": date + " 00:00:00",
+    "toDateTime": date  + ' 23:59:00',
+    "pageSize": 1000
+    }
+    url = "https://api.sbis.ru/retail/order/list?"
+
+    response = requests.get(url, params=parameters, headers=headers)
+    if response.status_code == 200:
+        return str(orders_process(response.json())['data']['total'])
+    raise HTTPException(400, "ОШИБКА")
+
 @app.get('/orders/get/yesterday', tags=['orders'])
 def get_orders():
     headers = {
