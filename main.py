@@ -107,7 +107,7 @@ def create_order(order: Order):
         "promocode": promos.get(order.promo, None),
         'comment': f'{order.comment}\n{order.adress}',
         'customer': {"name": order.name, "lastname":order.lastName, "phone": order.phone},
-        "datetime": f"{date} {hour}:{minute}:00", 
+        "datetime": f"{date} {hour:02}:{minute:02}:00", 
         "nomenclatures": nomenclature,
         "delivery": {"addressFull":adrF, "addressJSON": adrJ, "persons":order.persons,"changeAmount": order.changeAmount,"paymentType": order.paymentType, "isPickup": False}
     })
