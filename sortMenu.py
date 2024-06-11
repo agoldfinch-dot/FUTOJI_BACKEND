@@ -10,7 +10,7 @@ def get_menu():
         'pointId': 250,
         'priceListId': 25,
         "noStopList": True,
-        'onlyPublished': False,
+        'onlyPublished': True,
         'page': '0',
         'pageSize': '1000'
     }
@@ -40,12 +40,12 @@ def get_dishes(categories_with_ids, nomenclatures):
         hasMods = False
         if len(dish.get("modifiers")) > 0:
             for i in dish.get("modifiers"):
-                if dish.get('isParent'):
+                if i.get('isParent'):
                     continue;
-                if dish.get('images') == None:
+                if i.get('images') == None:
                     img = None
                 else: 
-                    img = dish.get('images')[0]
+                    img = i.get('images')[0]
                 mods_info = (i['id'], i['name'], i.get('cost', 'Unknown'), img, i.get('description_simple', 'None'), dish['id'])
                 mods.append(mods_info)
             hasMods = True;
