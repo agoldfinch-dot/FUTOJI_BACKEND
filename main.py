@@ -14,7 +14,7 @@ from fastapi.responses import FileResponse, PlainTextResponse
 
 SBIS_KEY = os.environ.get("SBIS_KEY")
 app = FastAPI()
-bot = telebot.TeleBot(os.environ.get('TG_KEY'))
+bot = telebot.TeleBot(os.environ.get('TG_KEY'), parse_mode="HTML")
 
 origins = ["*"]
 
@@ -127,7 +127,7 @@ def create_order(order: Order):
         raise HTTPException(400, response.json())
     
     responseJson = response.json()
-    bot.send_message(-1002031748319, f"Новый заказ!!!\n{responseJson['customer']['name']}\n{responseJson['customer']['phone']}\n{order.adress}\n{responseJson['totalPrice']}")
+    bot.send_message(-1002163907296, f"<b>Новый заказ!</b>\n<i>{responseJson['customer']['name']}</i>\n<b>{responseJson['customer']['phone']}</b><b>\n{order.adress}</b>\n<b>{responseJson['totalPrice']}</b>")
 
     url = f"https://api.sbis.ru/retail/order/{responseJson['saleKey']}/cancel"
     requests.put(url, headers=headers)
