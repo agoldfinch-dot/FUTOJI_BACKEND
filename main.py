@@ -34,11 +34,12 @@ class Order(BaseModel):
     time: str = "now"
     nomenclature: list
     comment: Union[str, None] = None
-    adress: str
+    adress: str = None
     persons: int = 1
     paymentType: str 
     source: int = 1
     promo: str = None
+    isPickup: bool = False
     
 class Orders(BaseModel):
     firstDate: Union[str, None] = None;
@@ -91,8 +92,12 @@ def create_order(order: Order):
     nomenclature = []
     for i in order.nomenclature:
         nomenclature.append({"id": int(i['id']), "count":int(i['count']), "priceListId":25, 'modifiers': i.get("modifiers", None)})
-
-    adrJ, adrF = get_adress("Владимирская обл., Собинский р-н., " +order.adress)
+    if order.adress != None:
+        adrJ, adrF = get_adress("Владимирская обл., Собинский р-н., " +order.adress)
+        address = order.adress
+    else:
+        adrJ, adrF = None, None
+        address = "Самовывоз"
     headers = {
         "X-SBISAccessToken": SBIS_KEY,
         'Content-Type': 'application/json'
@@ -106,11 +111,11 @@ def create_order(order: Order):
         _time = order.time.split(':')
         hour = int(_time[0])
         minute = int(_time[1])
-    if hour * 60 + minute >= 1382:
+    if hour * 60 + minute >= 1322:
         raise HTTPException(400,{'data': 'we are close'})
     if hour * 60 + minute < 600:
         hour = 10
-    promos = {"Люблю Санечку": "Svoyak backend", "День Рождения": "HB backend"}
+    promos = { "День Рождения": "HB backend"}
     parameters = json.dumps({
         'product': 'delivery',
         'pointId': 250,
@@ -119,7 +124,7 @@ def create_order(order: Order):
         'customer': {"name": order.name, "lastname":order.lastName, "phone": order.phone},
         "datetime": f"{date} {hour:02}:{minute:02}:00", 
         "nomenclatures": nomenclature,
-        "delivery": {"addressFull":adrF, "addressJSON": adrJ, "persons":order.persons,"changeAmount": order.changeAmount,"paymentType": order.paymentType, "isPickup": False}
+        "delivery": {"addressFull":adrF, "addressJSON": adrJ, "persons":order.persons,"changeAmount": order.changeAmount,"paymentType": order.paymentType, "isPickup": order.isPickup}
     })
     url = 'https://api.sbis.ru/retail/order/create'  
     response = requests.post(url, data=parameters, headers=headers)
@@ -127,7 +132,8 @@ def create_order(order: Order):
         raise HTTPException(400, response.json())
     
     responseJson = response.json()
-    bot.send_message(-1002163907296, f"<b>Новый заказ!</b>\n<i>{responseJson['customer']['name']}</i>\n<b>{responseJson['customer']['phone']}</b><b>\n{order.adress}</b>\n<b>{responseJson['totalPrice']}</b>")
+    
+    bot.send_message(-1002163907296, f"<b>Новый заказ!</b>\n<b>к {responseJson['datetime']}</b>\n<i>{responseJson['customer']['name']}</i>\n<b>{responseJson['customer']['phone']}</b><b>\n{address}</b>\n<b>{responseJson['totalPrice']}</b>")
 
     url = f"https://api.sbis.ru/retail/order/{responseJson['saleKey']}/cancel"
     requests.put(url, headers=headers)
