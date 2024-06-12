@@ -54,28 +54,38 @@ def get_adress(adress):
     }
     url = 'https://api.sbis.ru/retail/delivery/suggested-address?'  
     response = requests.get(url, params=parameters, headers=headers)
-
-    adrJ = response.json()["addresses"][0]["addressJSON"]
-    adrF = response.json()["addresses"][0]["addressFull"]
-    return adrJ, adrF
+    try:
+        adrJ = response.json()["addresses"][0]["addressJSON"]
+        adrF = response.json()["addresses"][0]["addressFull"]
+        return adrJ, adrF
+    except Exception:
+        raise HTTPException(400, "address not found")
 
 def get_delivery(adress):
     headers = {
         "X-SBISAccessToken": SBIS_KEY,
     }  
     parameters = {
-    'adress': adress,
+    'address': adress,
     'pointId': 250
     }
     url = 'https://api.sbis.ru/retail/delivery/cost?'  
     response = requests.get(url, params=parameters, headers=headers)
+    return response.json()
 
-   
 @app.get('/robots.txt', response_class=PlainTextResponse, tags=['robots'])
 def robots():
     data = """User-agent: *\nDisallow: /"""
     return data
 
+@app.get('/order/address', tags=['orders'])
+def get_delivery_price(q: Union[str, None] = None):
+    print(q)
+    adrJ, adrF = get_adress(q)
+    print(adrJ)
+    return get_delivery(adrJ)
+
+   
 @app.post('/orders/create', tags=['orders'])
 def create_order(order: Order):
     nomenclature = []
