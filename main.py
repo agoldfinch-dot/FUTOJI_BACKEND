@@ -135,8 +135,8 @@ def create_order(order: Order):
     
     bot.send_message(-1002163907296, f"<b>Новый заказ!</b>\n<b>к {responseJson['datetime']}</b>\n<i>{responseJson['customer']['name']}</i>\n<b>{responseJson['customer']['phone']}</b><b>\n{address}</b>\n<b>{responseJson['totalPrice']}</b>")
 
-    url = f"https://api.sbis.ru/retail/order/{responseJson['saleKey']}/cancel"
-    requests.put(url, headers=headers)
+    # url = f"https://api.sbis.ru/retail/order/{responseJson['saleKey']}/cancel"
+    # requests.put(url, headers=headers)
     return response.json()
 
 
