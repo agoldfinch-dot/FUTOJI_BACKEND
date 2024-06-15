@@ -187,7 +187,7 @@ def get_Product_by_id(q: Union[str, None] = None):
         raise HTTPException(404,{"error": "no mods"})
     for mod in ans:
         mods.append({'id': mod['ChildId'], 'name': mod['Name'], 'price': mod['Cost'], 'image': f'/images/getById?q={mod["ChildId"]}' if not mod['Image'] == None else None , 'ingredients': mod['Ingredients'], 'description': mod['Description'], 'mass': mod['Mass']})
-    return mods
+    return {"data": mods}
 
 @app.get("/products/getById", tags=['products'])
 def get_Product_by_id(q: Union[str, None] = None):
