@@ -34,7 +34,7 @@ class Order(BaseModel):
     time: str = "now"
     nomenclature: list
     comment: Union[str, None] = None
-    adress: str = None
+    adress: Union[str, None] = None
     persons: int = 1
     paymentType: str 
     source: int = 1
