@@ -32,7 +32,7 @@ def create_tables(cursor):
                         ParentId INT,
                         ChildId INT PRIMARY KEY,
                         Name VARCHAR(255),
-                        Cost VARCHAR(255),
+                        Cost FLOAT,
                         Image VARCHAR(1024),
                         Ingredients TEXT,
                         Description TEXT,
@@ -48,7 +48,7 @@ def create_tables(cursor):
                         ParentId INT,
                         ChildId INT,
                         Name VARCHAR(255),
-                        Cost VARCHAR(255),
+                        Cost FLOAT,
                         Image VARCHAR(1024),  -- Изменение типа данных на TEXT
                         Ingredients TEXT,
                         Description TEXT,

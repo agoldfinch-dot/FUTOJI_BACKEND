@@ -29,7 +29,7 @@ app.add_middleware(
 class Order(BaseModel):
     name: str
     lastName: Union[str, None] = None
-    changeAmount: float = None
+    changeAmount: Union[str, None] = None
     phone: str
     time: str = "now"
     nomenclature: list
