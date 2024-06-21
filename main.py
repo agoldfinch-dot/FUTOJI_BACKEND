@@ -124,7 +124,7 @@ def create_order(order: Order):
         'customer': {"name": order.name, "lastname":order.lastName, "phone": order.phone},
         "datetime": f"{date} {hour:02}:{minute:02}:00", 
         "nomenclatures": nomenclature,
-        "delivery": {"addressFull":adrF, "addressJSON": adrJ, "persons":order.persons,"changeAmount": order.changeAmount,"paymentType": order.paymentType, "isPickup": order.isPickup}
+        "delivery": {"addressFull":adrF, "addressJSON": adrJ, "persons":order.persons,"changeAmount": float(order.changeAmount),"paymentType": order.paymentType, "isPickup": order.isPickup}
     })
     url = 'https://api.sbis.ru/retail/order/create'  
     response = requests.post(url, data=parameters, headers=headers)
