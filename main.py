@@ -29,7 +29,7 @@ app.add_middleware(
 class Order(BaseModel):
     name: str
     lastName: Union[str, None] = None
-    changeAmount: Union[str, None] = None
+    changeAmount: Union[str, None, float] = None
     phone: str
     time: str = "now"
     nomenclature: list
@@ -107,6 +107,9 @@ def create_order(order: Order):
     if order.time == "now":
         hour = now.hour
         minute = now.minute + 2
+        if minute >= 60:
+            hour += 1
+            minute = 0
     else:
         _time = order.time.split(':')
         hour = int(_time[0])
@@ -124,7 +127,7 @@ def create_order(order: Order):
         'customer': {"name": order.name, "lastname":order.lastName, "phone": order.phone},
         "datetime": f"{date} {hour:02}:{minute:02}:00", 
         "nomenclatures": nomenclature,
-        "delivery": {"addressFull":adrF, "addressJSON": adrJ, "persons":order.persons,"changeAmount": float(order.changeAmount),"paymentType": order.paymentType, "isPickup": order.isPickup}
+        "delivery": {"addressFull":adrF, "addressJSON": adrJ, "persons":order.persons, "changeAmount": float(order.changeAmount) if order.changeAmount != None else None, "paymentType": order.paymentType, "isPickup": order.isPickup}
     })
     url = 'https://api.sbis.ru/retail/order/create'  
     response = requests.post(url, data=parameters, headers=headers)
