@@ -1,4 +1,6 @@
 import os
+import io
+import PIL
 import json
 import datetime
 import requests
@@ -239,19 +241,24 @@ def get_Product_by_name(s: Union[str, None] = None):
 
 @app.get("/images/getById", tags=['images'])
 def get_Product_by_id(q: Union[str, None] = None):
-    if os.path.isfile(f"./img/{q}.webp"):
-        f = open(f"./img/{q}.webp", "rb")
-        return Response(f.read(), media_type='image/webp')
+    if os.path.isfile(f"./img/{q}.jpg"):
+        f = open(f"./img/{q}.jpg", "rb")
+        return Response(f.read(), media_type='image/pjpeg')
     link = get_image_by_child_id(q)
     if link == None:
         raise HTTPException(404,{'data': 'no such photo'})
     link = link['Image']
     headers = {"X-SBISAccessToken": SBIS_KEY} 
     response = requests.get(f"https://api.sbis.ru/retail{link}", headers=headers)
-    print(response.text)
-    with open(f'./img/{q}.webp', 'wb') as f:
-        f.write(response.content)
-    return Response(response.content, media_type='image/webp')
+    img = PIL.Image.open(io.BytesIO(response.content))
+    destination = f"./img/{q}.jpg"
+    try:
+        img.save(destination, "JPEG", quality=80, optimize=True, progressive=True)
+    except IOError:
+        PIL.ImageFile.MAXBLOCK = img.size[0] * img.size[1]
+        img.save(destination, "JPEG", quality=80, optimize=True, progressive=True)
+    f = open(f"./img/{q}.jpg", "rb")
+    return Response(f.read(), media_type='image/pjpeg')
 
 def orders_process(ordersJson):
     response = {
