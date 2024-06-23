@@ -250,7 +250,7 @@ def get_Product_by_id(q: Union[str, None] = None):
     link = link['Image']
     headers = {"X-SBISAccessToken": SBIS_KEY} 
     response = requests.get(f"https://api.sbis.ru/retail{link}", headers=headers)
-    img = PIL.Image.open(io.BytesIO(response.content))
+    img = PIL.Image.open(io.BytesIO(response.content)).convert('RGB')
     destination = f"./img/{q}.jpg"
     try:
         img.save(destination, "JPEG", quality=80, optimize=True, progressive=True)
