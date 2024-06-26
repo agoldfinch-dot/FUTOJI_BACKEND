@@ -264,7 +264,7 @@ async def get_Product_by_id(q: Union[str, None] = None,  if_none_match: str | No
         if if_none_match == file_etag:
             return Response(status_code=304)
         f = open(f"./img/{q}.jpg", "rb")
-        return Response(f.read(), media_type='image/pjpeg', headers={"ETag": file_etag})
+        return Response(f.read(), media_type='image/pjpeg', headers={"ETag": file_etag, "Cache-Control": "public, max-age=604800"})
     link = get_image_by_child_id(q)
     if link == None:
         raise HTTPException(404,{'data': 'no such photo'})
@@ -280,7 +280,7 @@ async def get_Product_by_id(q: Union[str, None] = None,  if_none_match: str | No
         img.save(destination, "JPEG", quality=80, optimize=True, progressive=True)
     f = open(f"./img/{q}.jpg", "rb")
     file_etag = await get_etag(f"./img/{q}.jpg")
-    return Response(f.read(), media_type='image/pjpeg', headers={"ETag": file_etag})
+    return Response(f.read(), media_type='image/pjpeg', headers={"ETag": file_etag, "Cache-Control": "public, max-age=604800"})
 
 def orders_process(ordersJson):
     response = {
