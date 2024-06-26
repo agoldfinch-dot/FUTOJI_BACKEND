@@ -4,11 +4,14 @@ import PIL
 import json
 import datetime
 import requests
+import stat
+import anyio
+import hashlib
 import telebot
 
 from mysql import *
 from typing import Union
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Response, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -19,6 +22,21 @@ app = FastAPI()
 
 
 origins = ["*"]
+
+async def get_etag(file_path):
+    try:
+        stat_result = await anyio.to_thread.run_sync(os.stat, file_path)
+    except FileNotFoundError:
+        raise RuntimeError(f"File at path {file_path} does not exist.")
+    else:
+        mode = stat_result.st_mode
+        if not stat.S_ISREG(mode):
+            raise RuntimeError(f"File at path {file_path} is not a file.")
+        
+        #calculate the etag based on file size and last modification time
+        etag_base = str(stat_result.st_mtime) + "-" + str(stat_result.st_size)
+        etag = hashlib.md5(etag_base.encode()).hexdigest()
+        return etag
 
 app.add_middleware(
     CORSMiddleware,
@@ -240,10 +258,13 @@ def get_Product_by_name(s: Union[str, None] = None):
     return dishes
 
 @app.get("/images/getById", tags=['images'])
-def get_Product_by_id(q: Union[str, None] = None):
+async def get_Product_by_id(q: Union[str, None] = None,  if_none_match: str | None = Header(default=None)):
     if os.path.isfile(f"./img/{q}.jpg"):
+        file_etag = await get_etag(f"./img/{q}.jpg")
+        if if_none_match == file_etag:
+            return Response(status_code=304)
         f = open(f"./img/{q}.jpg", "rb")
-        return Response(f.read(), media_type='image/pjpeg')
+        return Response(f.read(), media_type='image/pjpeg', headers={"ETag": file_etag})
     link = get_image_by_child_id(q)
     if link == None:
         raise HTTPException(404,{'data': 'no such photo'})
@@ -258,7 +279,8 @@ def get_Product_by_id(q: Union[str, None] = None):
         PIL.ImageFile.MAXBLOCK = img.size[0] * img.size[1]
         img.save(destination, "JPEG", quality=80, optimize=True, progressive=True)
     f = open(f"./img/{q}.jpg", "rb")
-    return Response(f.read(), media_type='image/pjpeg')
+    file_etag = await get_etag(f"./img/{q}.jpg")
+    return Response(f.read(), media_type='image/pjpeg', headers={"ETag": file_etag})
 
 def orders_process(ordersJson):
     response = {
