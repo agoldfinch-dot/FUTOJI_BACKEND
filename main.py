@@ -58,7 +58,7 @@ class Order(BaseModel):
     persons: int = 1
     paymentType: str 
     source: int = 1
-    promo: str = None
+    promo: str = ""
     isPickup: bool = False
     
 class Orders(BaseModel):
