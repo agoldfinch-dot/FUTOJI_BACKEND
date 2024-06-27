@@ -138,11 +138,14 @@ def create_order(order: Order):
         raise HTTPException(400,{'data': 'we are close'})
     if hour * 60 + minute < 600:
         hour = 10
+    prom = None
+    if order.promo != None:
+        prom = order.promo.lower()
     promos = {"гей порно": "Svoyak backend","День Рождения": "HB backend"}
     parameters = json.dumps({
         'product': 'delivery',
         'pointId': 250,
-        "promocode": promos.get(order.promo.lower(), None),
+        "promocode": promos.get(prom, None),
         'comment': f'{order.comment}\n{order.adress}',
         'customer': {"name": order.name, "lastname":order.lastName, "phone": order.phone},
         "datetime": f"{date} {hour:02}:{minute:02}:00", 
