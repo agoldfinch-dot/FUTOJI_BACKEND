@@ -271,6 +271,8 @@ async def get_Product_by_id(q: Union[str, None] = None,  if_none_match: str | No
     link = get_image_by_child_id(q)
     if link == None:
         raise HTTPException(404,{'data': 'no such photo'})
+    if link['Image'] == None:
+        raise HTTPException(404, {'data': 'no such photo'})
     link = link['Image']
     headers = {"X-SBISAccessToken": SBIS_KEY} 
     response = requests.get(f"https://api.sbis.ru/retail{link}", headers=headers)
