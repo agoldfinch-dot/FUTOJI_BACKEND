@@ -8,6 +8,8 @@ import stat
 import anyio
 import hashlib
 import telebot
+import infoSQL
+import asyncio
 
 from mysql import *
 from typing import Union
@@ -18,7 +20,7 @@ from pydantic import BaseModel
 from fastapi.responses import FileResponse, PlainTextResponse
 
 SBIS_KEY = os.environ.get("SBIS_KEY")
-app = FastAPI()
+app = FastAPI(docs_url="", redoc_url="", openapi_url="")
 
 
 origins = ["*"]
@@ -106,9 +108,12 @@ def get_delivery_price(q: Union[str, None] = None):
     print(adrJ)
     return get_delivery(adrJ)
 
-   
+def telegrammSend(id, message):
+    bot = telebot.TeleBot(os.environ.get('TG_KEY'), parse_mode="HTML")
+    bot.send_message(id, message)
+
 @app.post('/orders/create', tags=['orders'])
-def create_order(order: Order):
+async def create_order(order: Order):
     nomenclature = []
     for i in order.nomenclature:
         nomenclature.append({"id": int(i['id']), "count":int(i['count']), "priceListId":25, 'modifiers': i.get("modifiers", None)})
@@ -158,14 +163,17 @@ def create_order(order: Order):
         raise HTTPException(400, response.json())
     
     responseJson = response.json()
-    try:
-        bot = telebot.TeleBot(os.environ.get('TG_KEY'), parse_mode="HTML")
-        bot.send_message(-1002163907296, f"<b>Новый заказ!</b>\n<b>к {responseJson['datetime']}</b>\n<i>{responseJson['customer']['name']}</i>\n<b>{responseJson['customer']['phone']}</b><b>\n{address}</b>\n<b>{responseJson['totalPrice']}</b>")
-    except Exception:
-        print(Exception)
     
-    # url = f"https://api.sbis.ru/retail/order/{responseJson['saleKey']}/cancel"
-    # requests.put(url, headers=headers)
+    try:
+        text = f"<b>Новый заказ!</b>\n<b>к {responseJson['datetime']}</b>\n<i>{responseJson['customer']['name']}</i>\n<b>{responseJson['customer']['phone']}</b><b>\n{address}</b>\n<b>{responseJson['totalPrice']}</b>"
+        sendMessage = asyncio.create_task(telegrammSend(-1002163907296, text))
+        addOrder = asyncio.create_task(infoSQL.addOrder(order.phone, order.name, order.nomenclature, order.source, responseJson['totalPrice']))
+
+        await sendMessage
+        await addOrder
+    except Exception as e:
+        print(e)
+
     return response.json()
 
 
@@ -177,6 +185,24 @@ def get_Categories():
         categories['data'].append(category)
     return categories
     
+
+@app.get("/info/dishesTop", tags=['info'])
+def get_dishesTop(q: Union[str, None] = None):
+    dishes = {'data': []}
+    for dish in infoSQL.getTopDishes(q):
+        dishInfo = {"id": dish['dish_id'], "count": dish['countNum']}
+        dishes['data'].append(dishInfo)
+    return dishes
+
+
+@app.get("/info/customersTop", tags=['info'])
+def get_dishesTop(q: Union[str, None] = None):
+    dishes = {'data': []}
+    for dish in infoSQL.getTopCustomers(q):
+        dishInfo = {"phone": dish['phone'], "name": dish['name'], "total": dish['total']}
+        dishes['data'].append(dishInfo)
+    return dishes
+
 # @app.get("/subCategories")
 # def get_sub_category(q: Union[str, None] = None):
 #     if q == None: 
