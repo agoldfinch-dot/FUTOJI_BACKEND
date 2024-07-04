@@ -166,9 +166,9 @@ async def create_order(order: Order):
     responseJson = response.json()
     
     try:
-        text = f"<b>Новый заказ!</b>\n<b>к {responseJson['datetime']}</b>\n<i>{responseJson['customer']['name']}</i>\n<b>{responseJson['customer']['phone']}</b><b>\n{address}</b>\n<b>{responseJson['totalPrice']}</b>"
+        text = f"<b>Новый заказ!</b>\n<b>к {responseJson['datetime']}</b>\n<i>{responseJson['customer']['name']} ({order.name})</i>\n<b>{responseJson['customer']['phone']}</b><b>\n{address}</b>\n<b>{responseJson['totalPrice']}</b>"
         sendMessage = asyncio.create_task(telegrammSend(-1002163907296, text))
-        addOrder = asyncio.create_task(infoSQL.addOrder(order.phone, order.name, order.nomenclature, order.source, responseJson['totalPrice']))
+        addOrder = asyncio.create_task(infoSQL.addOrder(responseJson['customer']['phone'], responseJson['customer']['name'], order.nomenclature, order.source, responseJson['totalPrice']))
         await sendMessage
         await addOrder
 
@@ -191,7 +191,7 @@ def get_Categories():
 def get_dishesTop(q: Union[str, None] = None):
     dishes = {'data': []}
     for dish in infoSQL.getTopDishes(q):
-        dishInfo = {"id": dish['dish_id'], "count": dish['countNum']}
+        dishInfo = {"id": dish['dish_id'], "name": dish['name'], "category": dish['categories'], "count": dish['countNum']}
         dishes['data'].append(dishInfo)
     return dishes
 

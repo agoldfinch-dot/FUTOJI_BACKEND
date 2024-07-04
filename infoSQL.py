@@ -46,8 +46,9 @@ def getTopDishes(limit = 5):
     if limit == None:
         limit = 5
     cursor = get_conn().cursor()
-    cursor.execute("SELECT dish_id, SUM(count) as countNum FROM info.order_data LEFT JOIN menu.Dishes ON info.order_data.dish_id = menu.Dishes.ChildId GROUP BY dish_id ORDER BY countNum DESC LIMIT %s;", (limit))
+    cursor.execute("SELECT dish_id, menu.Dishes.Name as name, menu.Dishes.ParentId as categories, SUM(count) as countNum FROM info.order_data LEFT JOIN menu.Dishes ON info.order_data.dish_id = menu.Dishes.ChildId GROUP BY dish_id ORDER BY countNum DESC LIMIT %s;", (limit))
     return cursor.fetchall()
+
 def getTopCustomers(limit = 5):
     if limit == None:
         limit = 5
