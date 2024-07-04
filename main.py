@@ -167,9 +167,10 @@ async def create_order(order: Order):
     try:
         text = f"<b>Новый заказ!</b>\n<b>к {responseJson['datetime']}</b>\n<i>{responseJson['customer']['name']}</i>\n<b>{responseJson['customer']['phone']}</b><b>\n{address}</b>\n<b>{responseJson['totalPrice']}</b>"
         sendMessage = asyncio.create_task(telegrammSend(-1002163907296, text))
+        await sendMessage
         infoSQL.addOrder(order.phone, order.name, order.nomenclature, order.source, responseJson['totalPrice'])
 
-        await sendMessage
+        
     except Exception as e:
         print(e)
 
