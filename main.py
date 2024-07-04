@@ -186,9 +186,16 @@ def get_Categories():
         categories['data'].append(category)
     return categories
     
+@app.get("/info/orders", tags=['info'])
+def get_orders(q: Union[int, None] = None, l: Union[int, None] = 5):
+    orders = {'data': []}
+    for order in infoSQL.getOrdersByCustomerId(q, l):
+        orderInfo = {"id": order['id'], "source": order['source_id'], "total": order['final_price'], "time": order['time']}
+        orders['data'].append(orderInfo)
+    return orders
 
 @app.get("/info/dishesTop", tags=['info'])
-def get_dishesTop(q: Union[str, None] = None):
+def get_dishesTop(q: Union[int, None] = 5):
     dishes = {'data': []}
     for dish in infoSQL.getTopDishes(q):
         dishInfo = {"id": dish['dish_id'], "name": dish['name'], "category": dish['categories'], "count": dish['countNum']}
@@ -197,10 +204,10 @@ def get_dishesTop(q: Union[str, None] = None):
 
 
 @app.get("/info/customersTop", tags=['info'])
-def get_dishesTop(q: Union[str, None] = None):
+def get_dishesTop(q: Union[int, None] = 5):
     dishes = {'data': []}
     for dish in infoSQL.getTopCustomers(q):
-        dishInfo = {"phone": dish['phone'], "name": dish['name'], "total": dish['total']}
+        dishInfo = {"id": dish['id'],"phone": dish['phone'], "name": dish['name'], "total": dish['total']}
         dishes['data'].append(dishInfo)
     return dishes
 

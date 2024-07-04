@@ -42,18 +42,19 @@ def getCustomerId(phone):
     cursor.execute("SELECT id FROM info.customers WHERE phone = %s;", (phone))
     return cursor.fetchone();
 
-def getTopDishes(limit = 5):
-    if limit == None:
-        limit = 5
+def getTopDishes(limit: int):
     cursor = get_conn().cursor()
     cursor.execute("SELECT dish_id, menu.Dishes.Name as name, menu.Dishes.ParentId as categories, SUM(count) as countNum FROM info.order_data LEFT JOIN menu.Dishes ON info.order_data.dish_id = menu.Dishes.ChildId GROUP BY dish_id ORDER BY countNum DESC LIMIT %s;", (limit))
     return cursor.fetchall()
 
-def getTopCustomers(limit = 5):
-    if limit == None:
-        limit = 5
+def getOrdersByCustomerId(id: int, limit: int):
     cursor = get_conn().cursor()
-    cursor.execute("SELECT cus.phone AS phone, cus.name AS name, SUM(final_price) as total FROM info.customers AS cus LEFT JOIN info.orders AS ord ON cus.id = ord.customer_id GROUP BY cus.id ORDER BY total DESC LIMIT %s;", (limit))
+    cursor.execute("SELECT id, source_id, final_price, time FROM info.orders WHERE info.orders.customer_id = %s ORDER BY time DESC LIMIT %s", (id, limit))
+    return cursor.fetchall()
+
+def getTopCustomers(limit: int):
+    cursor = get_conn().cursor()
+    cursor.execute("SELECT cus.id AS id, cus.phone AS phone, cus.name AS name, SUM(final_price) as total FROM info.customers AS cus LEFT JOIN info.orders AS ord ON cus.id = ord.customer_id GROUP BY cus.id ORDER BY total DESC LIMIT %s;", (limit))
     return cursor.fetchall()
     
 
