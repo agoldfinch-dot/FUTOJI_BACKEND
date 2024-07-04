@@ -56,7 +56,7 @@ def getTopCustomers(limit = 5):
     return cursor.fetchall()
     
 
-def addOrder(phone, name, orderList, source, finalPrice):
+async def addOrder(phone, name, orderList, source, finalPrice):
     if isNewCustomer(phone) == True:
         addCustomer(phone, name)
     orderNomenclature = []

@@ -1,6 +1,7 @@
 import os
 import io
 import PIL
+import traceback
 import json
 import datetime
 import requests
@@ -108,7 +109,7 @@ def get_delivery_price(q: Union[str, None] = None):
     print(adrJ)
     return get_delivery(adrJ)
 
-def telegrammSend(id, message):
+async def telegrammSend(id, message):
     bot = telebot.TeleBot(os.environ.get('TG_KEY'), parse_mode="HTML")
     bot.send_message(id, message)
 
@@ -167,12 +168,12 @@ async def create_order(order: Order):
     try:
         text = f"<b>Новый заказ!</b>\n<b>к {responseJson['datetime']}</b>\n<i>{responseJson['customer']['name']}</i>\n<b>{responseJson['customer']['phone']}</b><b>\n{address}</b>\n<b>{responseJson['totalPrice']}</b>"
         sendMessage = asyncio.create_task(telegrammSend(-1002163907296, text))
+        addOrder = asyncio.create_task(infoSQL.addOrder(order.phone, order.name, order.nomenclature, order.source, responseJson['totalPrice']))
         await sendMessage
-        infoSQL.addOrder(order.phone, order.name, order.nomenclature, order.source, responseJson['totalPrice'])
+        await addOrder
 
-        
     except Exception as e:
-        print(e)
+        traceback.print_exc()
 
     return response.json()
 
