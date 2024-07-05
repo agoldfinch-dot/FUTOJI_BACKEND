@@ -147,7 +147,7 @@ async def create_order(order: Order):
     prom = None
     if order.promo != None:
         prom = order.promo.lower()
-    promos = {"гей порно": "Svoyak backend","День Рождения": "HB backend"}
+    promos = {"гей порно": "Svoyak backend", "День Рождения": "HB backend", "Момент": "HappyHour back"}
     parameters = json.dumps({
         'product': 'delivery',
         'pointId': 250,
