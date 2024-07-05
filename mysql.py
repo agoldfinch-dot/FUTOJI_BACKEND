@@ -21,7 +21,7 @@ def get_dishes_by_parent_id(parent_id):
     dishes = cursor.fetchall()
     cursor.close()
     con.close()
-    if parent_id == 828:
+    if parent_id == "828":
         return dishes[::-1]
     return dishes
 
