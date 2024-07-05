@@ -8,6 +8,7 @@ menu.db
 *.so
 menuSbis.json
 img/
+pics/
 # Distribution / packaging
 .Python
 build/
