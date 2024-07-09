@@ -62,6 +62,9 @@ def insert_categories(cursor, categories_with_ids):
         cursor.execute("INSERT INTO Categories (ParentId, Name, IsMain, Parent) VALUES (%s, %s, %s, %s)",
                        (category_id, category_name, isMain, parent))
 
+def insert_categories_top(cursor):
+    cursor.execute("INSERT INTO Categories (ParentId, Name, IsMain, Parent) VALUES (%s, %s, %s, %s)", (3, "Популярное", True, None))
+
 def insert_mods(cursor, mods):
     for i in mods:
         dish_id, dish_name, dish_cost, dish_image, dish_description, parent_id = i
@@ -145,7 +148,7 @@ try:
     insert_categories(cursor, categories_with_ids)
     insert_dishes(cursor, dishes_by_category)  # Вставка блюд перед модификациями
     insert_mods(cursor, mods)
-
+    insert_categories_top(cursor)
     # Фиксация изменений и закрытие соединения
     conn.commit()
     conn.close()

@@ -42,6 +42,11 @@ def getCustomerId(phone):
     cursor.execute("SELECT id FROM info.customers WHERE phone = %s;", (phone))
     return cursor.fetchone();
 
+def getTopCategory():
+    cursor = get_conn().cursor()
+    cursor.execute("SELECT menu.Dishes.ChildId as ChildId, menu.Dishes.Name as Name, menu.Dishes.Cost as Cost, menu.Dishes.Image as Image, menu.Dishes.Ingredients as Ingredients, menu.Dishes.Description as Description, menu.Dishes.Mass as Mass, menu.Dishes.hasMods as hasMods FROM info.order_data JOIN menu.Dishes ON info.order_data.dish_id = menu.Dishes.ChildId GROUP BY dish_id ORDER BY countNum DESC LIMIT 15")
+    return cursor.fetchall()
+
 def getTopDishes(limit: int):
     cursor = get_conn().cursor()
     cursor.execute("SELECT dish_id, menu.Dishes.Name as name, menu.Dishes.ParentId as categories, SUM(count) as countNum FROM info.order_data LEFT JOIN menu.Dishes ON info.order_data.dish_id = menu.Dishes.ChildId GROUP BY dish_id ORDER BY countNum DESC LIMIT %s;", (limit))

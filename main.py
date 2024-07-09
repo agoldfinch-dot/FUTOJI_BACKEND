@@ -228,16 +228,30 @@ def get_Category(q: Union[str, None] = None):
     if q == None: 
         raise HTTPException(404,{"error":"No id"})
     category = {'data':[]}
-    for product in get_dishes_by_parent_id(q):
-        mods = None
-        if product['hasMods'] == True:
-            mods = []
-            for modi in get_mods(product['ChildId']):
-                #ChildId, Name, Cost, Image, Ingredients, Description, Mass
-                mod = {'id': modi['ChildId'], 'name': modi['Name'], 'price': modi['Cost'], 'image': f'/images/getById?q={modi["ChildId"]}' if not modi['Image'] == None else None , 'ingredients': modi['Ingredients'], 'description': modi['Description'], 'mass': modi['Mass']}
-                mods.append(mod)
-        #ChildId, Name, Cost, Image, Ingredients, Description, Mass, hasMods        
-        category['data'].append({'id': product['ChildId'], 'name': product['Name'], 'price': product['Cost'], 'image': f'/images/getById?q={product["ChildId"]}' if not product['Image'] == None else None , 'ingredients': product['Ingredients'], 'description': product['Description'], 'mass': product['Mass'], 'hasMods': product['hasMods'], 'mods': mods})
+    if q == "3":
+        for product in infoSQL.getTopCategory():
+            if product['ChildId'] == 1927:
+                continue;
+            mods = None
+            if product['hasMods'] == True:
+                mods = []
+                for modi in get_mods(product['ChildId']):
+                    #ChildId, Name, Cost, Image, Ingredients, Description, Mass
+                    mod = {'id': modi['ChildId'], 'name': modi['Name'], 'price': modi['Cost'], 'image': f'/images/getById?q={modi["ChildId"]}' if not modi['Image'] == None else None , 'ingredients': modi['Ingredients'], 'description': modi['Description'], 'mass': modi['Mass']}
+                    mods.append(mod)
+            #ChildId, Name, Cost, Image, Ingredients, Description, Mass, hasMods        
+            category['data'].append({'id': product['ChildId'], 'name': product['Name'], 'price': product['Cost'], 'image': f'/images/getById?q={product["ChildId"]}' if not product['Image'] == None else None , 'ingredients': product['Ingredients'], 'description': product['Description'], 'mass': product['Mass'], 'hasMods': product['hasMods'], 'mods': mods})
+    else: 
+        for product in get_dishes_by_parent_id(q):
+            mods = None
+            if product['hasMods'] == True:
+                mods = []
+                for modi in get_mods(product['ChildId']):
+                    #ChildId, Name, Cost, Image, Ingredients, Description, Mass
+                    mod = {'id': modi['ChildId'], 'name': modi['Name'], 'price': modi['Cost'], 'image': f'/images/getById?q={modi["ChildId"]}' if not modi['Image'] == None else None , 'ingredients': modi['Ingredients'], 'description': modi['Description'], 'mass': modi['Mass']}
+                    mods.append(mod)
+            #ChildId, Name, Cost, Image, Ingredients, Description, Mass, hasMods        
+            category['data'].append({'id': product['ChildId'], 'name': product['Name'], 'price': product['Cost'], 'image': f'/images/getById?q={product["ChildId"]}' if not product['Image'] == None else None , 'ingredients': product['Ingredients'], 'description': product['Description'], 'mass': product['Mass'], 'hasMods': product['hasMods'], 'mods': mods})
     if category == {'data':[]}:
         raise HTTPException(404,{"error":"No data"})
     return category
