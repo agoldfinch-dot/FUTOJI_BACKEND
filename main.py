@@ -102,11 +102,25 @@ def robots():
     data = """User-agent: *\nDisallow: /"""
     return data
 
+@app.get('/order/address/coords', tags=['orders'])
+def addressCords(x: Union[str, None] = None, y: Union[str, None] = None ):
+    url = f"https://geocode-maps.yandex.ru/1.x/?apikey=eb7cd4e0-a9a5-4dfb-b5ca-2dcec5a4bc66&geocode={y},{x}&results=1&kind=house&format=json"
+
+    response = requests.get(url)
+    print(response.text)
+    if response.status_code != 200:
+        raise HTTPException(404, "not found")
+    if len(response.json()['response']['GeoObjectCollection']['featureMember']) == 0:
+        raise HTTPException(404, "no houses")
+    data = response.json()['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']['metaDataProperty']['GeocoderMetaData']['Address']['Components']
+    components = {}
+    for i in data:
+        components[i['kind']] = i['name']
+    return components
+
 @app.get('/order/address', tags=['orders'])
 def get_delivery_price(q: Union[str, None] = None):
-    print(q)
     adrJ, adrF = get_adress(q)
-    print(adrJ)
     return get_delivery(adrJ)
 
 async def telegrammSend(id, message):
