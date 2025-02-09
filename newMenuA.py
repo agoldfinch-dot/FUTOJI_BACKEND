@@ -2,7 +2,7 @@ import pymysql
 import json
 import traceback
 import os
-from sortMenu import get_menu, get_dishes
+from sortMenuA import get_menu, get_dishes
 
 SBIS_KEY = os.environ.get("SBIS_KEY_A")
 
