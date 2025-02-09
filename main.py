@@ -422,6 +422,29 @@ def get_Product_by_id(q: Union[str, None] = None):
     product['mods'] = mods
     return {'data': product}
 
+@app.get("/android/products/getById", tags=['products'])
+def get_Product_by_id(q: Union[str, None] = None):
+    product = {}
+    products = get_dish_info_by_child_id(q)
+    if products == None:
+        raise HTTPException(404,{"error": "No such product"})
+    mods = None
+    if products['hasMods'] == True:
+        mods = []
+        for modi in get_mods(products['ChildId']):
+            mod = {'id': modi['ChildId'], 'name': modi['Name'], 'price': modi['Cost'], 'image': f'/images/getById?q={modi["ChildId"]}' if not modi['Image'] == None else None , 'ingredients': modi['Ingredients'], 'description': modi['Description'], 'mass': modi['Mass']}
+            mods.append(mod)
+    product['name'] = products['Name']
+    product['id'] = products['ChildId']
+    product['categoryId'] = products['ParentId']
+    product['price'] = products['Cost']
+    product['ingredients'] = products['Ingredients']
+    product['picture'] = f'/images/getById?q={products["ChildId"]}' if products['Image'] != None else None
+    product['about'] = products['Description']
+    product['mass'] = products['Mass']
+    product['hasMods'] = products['hasMods']
+    product['mods'] = mods
+    return {'data': product}
 
 @app.get("/android/products/getByName", tags=['products'])
 def get_Product_by_name(s: Union[str, None] = None):
