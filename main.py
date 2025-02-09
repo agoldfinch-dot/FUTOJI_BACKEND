@@ -23,6 +23,7 @@ from pydantic import BaseModel
 from fastapi.responses import FileResponse, PlainTextResponse
 
 SBIS_KEY = os.environ.get("SBIS_KEY")
+SBIS_KEY_A = os.environ.get("SBIS_KEY_A")
 app = FastAPI(docs_url="", redoc_url="", openapi_url="")
 
 
