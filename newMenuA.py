@@ -155,7 +155,7 @@ try:
     insert_categories(cursor, categories_with_ids)
     insert_dishes(cursor, dishes_by_category)  # Вставка блюд перед модификациями
     insert_mods(cursor, mods)
-    insert_categories_top(cursor)
+    #insert_categories_top(cursor)
     # Фиксация изменений и закрытие соединения
     conn.commit()
     conn.close()
