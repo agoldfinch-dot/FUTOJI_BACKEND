@@ -193,7 +193,7 @@ async def create_order(order: Order):
 
     return response.json()
 
-app.post('android/orders/create', tags=['android'])
+app.post('/android/orders/create', tags=['android'])
 async def create_orderA(order: Order):
     nomenclature = []
     for i in order.nomenclature:
@@ -257,7 +257,7 @@ async def create_orderA(order: Order):
 
     return response.json()
 
-@app.get("android/categories", tags=['categories'])
+@app.get("/android/categories", tags=['categories'])
 def get_Categories():
     categories = {'data': []}
     for category in mysqlA.get_all_main_categories():
@@ -310,7 +310,7 @@ def get_dishesTop(q: Union[int, None] = 5):
 #         sub_category.append({"id": s_id, "name": s_name})
 #     return {'data': sub_category}
 
-@app.get("android/categories/getById", tags=['categories'])
+@app.get("/android/categories/getById", tags=['categories'])
 def get_Category(q: Union[str, None] = None):
     if q == None: 
         raise HTTPException(404,{"error":"No id"})
@@ -377,7 +377,7 @@ def get_Category(q: Union[str, None] = None):
         raise HTTPException(404,{"error":"No data"})
     return category
 
-@app.get("android/products/getMods", tags=['products'])
+@app.get("/android/products/getMods", tags=['products'])
 def get_Product_by_id(q: Union[str, None] = None):
     mods = []
     ans = mysqlA.get_mods(q)
@@ -422,7 +422,7 @@ def get_Product_by_id(q: Union[str, None] = None):
     return {'data': product}
 
 
-@app.get("android/products/getByName", tags=['products'])
+@app.get("/android/products/getByName", tags=['products'])
 def get_Product_by_name(s: Union[str, None] = None):
     if s == None: 
         raise HTTPException(404,{"error":"No search params"})
@@ -458,7 +458,7 @@ def get_Product_by_name(s: Union[str, None] = None):
         dishes['data'].append({'id': product['ChildId'], 'name': product['Name'], 'price': product['Cost'], 'image': f'/images/getById?q={product["ChildId"]}' if not product['Image'] == None else None , 'ingredients': product['Ingredients'], 'description': product['Description'], 'mass': product['Mass'], 'hasMods': product['hasMods'], 'mods': mods})
     return dishes
 
-@app.get("android/images/getById", tags=['images'])
+@app.get("/android/images/getById", tags=['images'])
 async def get_Product_by_id(q: Union[str, None] = None,  if_none_match: str | None = Header(default=None)):
     if os.path.isfile(f"./img/{q}.webp"):
         file_etag = await get_etag(f"./img/{q}.webp")
