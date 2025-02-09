@@ -14,6 +14,7 @@ import infoSQL
 import asyncio
 
 from mysql import *
+import mysqlA
 from typing import Union
 from fastapi import FastAPI, HTTPException, Response, Header
 from fastapi.middleware.cors import CORSMiddleware
@@ -192,6 +193,77 @@ async def create_order(order: Order):
 
     return response.json()
 
+app.post('android/orders/create', tags=['android'])
+async def create_orderA(order: Order):
+    nomenclature = []
+    for i in order.nomenclature:
+        nomenclature.append({"id": int(i['id']), "count":int(i['count']), "priceListId":49, 'modifiers': i.get("modifiers", None)})
+    if order.adress != None:
+        adrJ, adrF = get_adress("Владимирская обл., Собинский р-н., " +order.adress)
+        address = order.adress
+    else:
+        adrJ, adrF = None, None
+        address = "Самовывоз"
+    headers = {
+        "X-SBISAccessToken": SBIS_KEY_A,
+        'Content-Type': 'application/json'
+    }  
+    now = datetime.datetime.now()
+    date = now.date()
+    if order.time == "now":
+        hour = now.hour
+        minute = now.minute + 2
+        if minute >= 60:
+            hour += 1
+            minute = 0
+    else:
+        _time = order.time.split(':')
+        hour = int(_time[0])
+        minute = int(_time[1])
+    if hour * 60 + minute >= 1322:
+        raise HTTPException(400,{'data': 'Мы закрыты!'})
+    if hour * 60 + minute < 600:
+        raise HTTPException(400,{'data': 'Мы закрыты!'})
+    prom = None
+    if order.promo != None:
+        prom = order.promo.lower()
+    promos = {"гей порно": "Svoyak backend", "день рождения": "HB backend", "момент": "HappyHour back"}
+    parameters = json.dumps({
+        'product': 'delivery',
+        'pointId': 250,
+        "promocode": promos.get(prom, prom),
+        'comment': f'{order.comment}\n{order.adress}',
+        'customer': {"name": order.name, "lastname":order.lastName, "phone": order.phone},
+        "datetime": f"{date} {hour:02}:{minute:02}:00", 
+        "nomenclatures": nomenclature,
+        "delivery": {"addressFull":adrF, "addressJSON": adrJ, "persons":order.persons, "changeAmount": float(order.changeAmount) if order.changeAmount != None else None, "paymentType": order.paymentType, "isPickup": order.isPickup}
+    })
+    url = 'https://api.sbis.ru/retail/order/create'  
+    response = requests.post(url, data=parameters, headers=headers)
+    if response.status_code != 200:
+        raise HTTPException(400, response.json())
+    
+    responseJson = response.json()
+    
+    try:
+        text = f"<b>Новый заказ!</b>\n<b>к {responseJson['datetime']}</b>\n<i>{responseJson['customer']['name']} ({order.name})</i>\n<b>{responseJson['customer']['phone']}</b><b>\n{address}</b>\n<b>{responseJson['totalPrice']}</b>"
+        sendMessage = asyncio.create_task(telegrammSend(-1002163907296, text))
+        addOrder = asyncio.create_task(infoSQL.addOrder(responseJson['customer']['phone'], responseJson['customer']['name'], order.nomenclature, order.source, responseJson['totalPrice']))
+        await sendMessage
+        await addOrder
+
+    except Exception as e:
+        traceback.print_exc()
+
+    return response.json()
+
+@app.get("android/categories", tags=['categories'])
+def get_Categories():
+    categories = {'data': []}
+    for category in mysqlA.get_all_main_categories():
+        category = {'name': category['Name'], 'id': category['ParentId'], "subCategories": []}
+        categories['data'].append(category)
+    return categories
 
 @app.get("/categories", tags=['categories'])
 def get_Categories():
@@ -238,6 +310,40 @@ def get_dishesTop(q: Union[int, None] = 5):
 #         sub_category.append({"id": s_id, "name": s_name})
 #     return {'data': sub_category}
 
+@app.get("android/categories/getById", tags=['categories'])
+def get_Category(q: Union[str, None] = None):
+    if q == None: 
+        raise HTTPException(404,{"error":"No id"})
+    category = {'data':[]}
+    if q == "3":
+        ...
+    #     for product in infoSQL.getTopCategory():
+    #         if product['ChildId'] == 1927:
+    #             continue;
+    #         mods = None
+    #         if product['hasMods'] == True:
+    #             mods = []
+    #             for modi in get_mods(product['ChildId']):
+    #                 #ChildId, Name, Cost, Image, Ingredients, Description, Mass
+    #                 mod = {'id': modi['ChildId'], 'name': modi['Name'], 'price': modi['Cost'], 'image': f'/images/getById?q={modi["ChildId"]}' if not modi['Image'] == None else None , 'ingredients': modi['Ingredients'], 'description': modi['Description'], 'mass': modi['Mass']}
+    #                 mods.append(mod)
+    #         #ChildId, Name, Cost, Image, Ingredients, Description, Mass, hasMods        
+    #         category['data'].append({'id': product['ChildId'], 'name': product['Name'], 'price': product['Cost'], 'image': f'/images/getById?q={product["ChildId"]}' if not product['Image'] == None else None , 'ingredients': product['Ingredients'], 'description': product['Description'], 'mass': product['Mass'], 'hasMods': product['hasMods'], 'mods': mods})
+    else: 
+        for product in mysqlA.get_dishes_by_parent_id(q):
+            mods = None
+            if product['hasMods'] == True:
+                mods = []
+                for modi in get_mods(product['ChildId']):
+                    #ChildId, Name, Cost, Image, Ingredients, Description, Mass
+                    mod = {'id': modi['ChildId'], 'name': modi['Name'], 'price': modi['Cost'], 'image': f'/images/getById?q={modi["ChildId"]}' if not modi['Image'] == None else None , 'ingredients': modi['Ingredients'], 'description': modi['Description'], 'mass': modi['Mass']}
+                    mods.append(mod)
+            #ChildId, Name, Cost, Image, Ingredients, Description, Mass, hasMods        
+            category['data'].append({'id': product['ChildId'], 'name': product['Name'], 'price': product['Cost'], 'image': f'/images/getById?q={product["ChildId"]}' if not product['Image'] == None else None , 'ingredients': product['Ingredients'], 'description': product['Description'], 'mass': product['Mass'], 'hasMods': product['hasMods'], 'mods': mods})
+    if category == {'data':[]}:
+        raise HTTPException(404,{"error":"No data"})
+    return category
+
 @app.get("/categories/getById", tags=['categories'])
 def get_Category(q: Union[str, None] = None):
     if q == None: 
@@ -270,6 +376,16 @@ def get_Category(q: Union[str, None] = None):
     if category == {'data':[]}:
         raise HTTPException(404,{"error":"No data"})
     return category
+
+@app.get("android/products/getMods", tags=['products'])
+def get_Product_by_id(q: Union[str, None] = None):
+    mods = []
+    ans = mysqlA.get_mods(q)
+    if ans == None:
+        raise HTTPException(404,{"error": "no mods"})
+    for mod in ans:
+        mods.append({'id': mod['ChildId'], 'name': mod['Name'], 'price': mod['Cost'], 'image': f'/images/getById?q={mod["ChildId"]}' if not mod['Image'] == None else None , 'ingredients': mod['Ingredients'], 'description': mod['Description'], 'mass': mod['Mass']})
+    return {"data": mods}
 
 @app.get("/products/getMods", tags=['products'])
 def get_Product_by_id(q: Union[str, None] = None):
@@ -305,6 +421,25 @@ def get_Product_by_id(q: Union[str, None] = None):
     product['mods'] = mods
     return {'data': product}
 
+
+@app.get("android/products/getByName", tags=['products'])
+def get_Product_by_name(s: Union[str, None] = None):
+    if s == None: 
+        raise HTTPException(404,{"error":"No search params"})
+    dishes = {'data': []}
+    dishesArr = mysqlA.get_dishs_by_name(s)
+    if dishesArr == None:
+        raise HTTPException(404,{'data': []})
+    for product in dishesArr:
+        mods = None
+        if product['hasMods'] == True:
+            mods = []
+            for modi in get_mods(id):
+                mod = {'id': modi['ChildId'], 'name': modi['Name'], 'price': modi['Cost'], 'image': f'/images/getById?q={modi["ChildId"]}' if not modi['Image'] == None else None , 'ingredients': modi['Ingredients'], 'description': modi['Description'], 'mass': modi['Mass']}
+                mods.append(mod)
+        dishes['data'].append({'id': product['ChildId'], 'name': product['Name'], 'price': product['Cost'], 'image': f'/images/getById?q={product["ChildId"]}' if not product['Image'] == None else None , 'ingredients': product['Ingredients'], 'description': product['Description'], 'mass': product['Mass'], 'hasMods': product['hasMods'], 'mods': mods})
+    return dishes
+
 @app.get("/products/getByName", tags=['products'])
 def get_Product_by_name(s: Union[str, None] = None):
     if s == None: 
@@ -322,6 +457,33 @@ def get_Product_by_name(s: Union[str, None] = None):
                 mods.append(mod)
         dishes['data'].append({'id': product['ChildId'], 'name': product['Name'], 'price': product['Cost'], 'image': f'/images/getById?q={product["ChildId"]}' if not product['Image'] == None else None , 'ingredients': product['Ingredients'], 'description': product['Description'], 'mass': product['Mass'], 'hasMods': product['hasMods'], 'mods': mods})
     return dishes
+
+@app.get("android/images/getById", tags=['images'])
+async def get_Product_by_id(q: Union[str, None] = None,  if_none_match: str | None = Header(default=None)):
+    if os.path.isfile(f"./img/{q}.webp"):
+        file_etag = await get_etag(f"./img/{q}.webp")
+        if if_none_match == file_etag:
+            return Response(status_code=304)
+        f = open(f"./img/{q}.webp", "rb")
+        return Response(f.read(), media_type='image/webp', headers={"ETag": file_etag, "Cache-Control": "public, max-age=6048000"})
+    link = mysqlA.get_image_by_child_id(q)
+    if link == None:
+        raise HTTPException(404,{'data': 'no such photo'})
+    if link['Image'] == None:
+        raise HTTPException(404, {'data': 'no such photo'})
+    link = link['Image']
+    headers = {"X-SBISAccessToken": SBIS_KEY} 
+    response = requests.get(f"https://api.sbis.ru/retail{link}", headers=headers)
+    img = PIL.Image.open(io.BytesIO(response.content)).convert('RGBA')
+    destination = f"./img/{q}.webp"
+    try:
+        img.save(destination, "WEBP", quality=80, optimize=True)
+    except IOError:
+        PIL.ImageFile.MAXBLOCK = img.size[0] * img.size[1]
+        img.save(destination, "WEBP", quality=80, optimize=True)
+    f = open(f"./img/{q}.webp", "rb")
+    file_etag = await get_etag(f"./img/{q}.webp")
+    return Response(f.read(), media_type='image/webp', headers={"ETag": file_etag, "Cache-Control": "public, max-age=6048000"})
 
 @app.get("/images/getById", tags=['images'])
 async def get_Product_by_id(q: Union[str, None] = None,  if_none_match: str | None = Header(default=None)):
