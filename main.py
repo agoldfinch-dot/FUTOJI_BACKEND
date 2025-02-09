@@ -1,3 +1,4 @@
+
 import os
 import io
 import PIL
@@ -165,7 +166,7 @@ async def create_order(order: Order):
     parameters = json.dumps({
         'product': 'delivery',
         'pointId': 250,
-        "promocode": promos.get(prom, None),
+        "promocode": promos.get(prom, prom),
         'comment': f'{order.comment}\n{order.adress}',
         'customer': {"name": order.name, "lastname":order.lastName, "phone": order.phone},
         "datetime": f"{date} {hour:02}:{minute:02}:00", 
@@ -338,7 +339,7 @@ async def get_Product_by_id(q: Union[str, None] = None,  if_none_match: str | No
     link = link['Image']
     headers = {"X-SBISAccessToken": SBIS_KEY} 
     response = requests.get(f"https://api.sbis.ru/retail{link}", headers=headers)
-    img = PIL.Image.open(io.BytesIO(response.content)).convert('RGB')
+    img = PIL.Image.open(io.BytesIO(response.content)).convert('RGBA')
     destination = f"./img/{q}.webp"
     try:
         img.save(destination, "WEBP", quality=80, optimize=True)

@@ -1,5 +1,6 @@
 import pymysql
 import json
+import traceback
 import os
 from sortMenu import get_menu, get_dishes
 
@@ -71,7 +72,9 @@ def insert_mods(cursor, mods):
         if dish_description:
             temp = dish_description.split('/')
             temp.extend([None] * (3 - len(temp)))
-            ingredients, description, mass = temp
+            ingredients = temp[0]
+            description = temp[1] 
+            mass = temp[2]
         else:
             ingredients = description = mass = None
 
@@ -90,7 +93,10 @@ def insert_dishes(cursor, dishes_by_category):
             if dish_description:
                 temp = dish_description.split('/')
                 temp.extend([None] * (3 - len(temp)))
-                ingredients, description, mass = temp
+                print(temp)
+                ingredients = temp[0]
+                description = temp[1]
+                mass = temp[2]
             else:
                 ingredients = description = mass = None
 
@@ -110,9 +116,9 @@ cursor = conn.cursor()
 
 
 
-drop_backup_tables(cursor)
+#drop_backup_tables(cursor)
 
-create_backup_tables(cursor)
+#create_backup_tables(cursor)
 
 conn.commit()
 conn.close()
@@ -153,8 +159,9 @@ try:
     conn.commit()
     conn.close()
 
-except Exception:
+except Exception as e:
     print('back')
+    traceback.print_exc()
     conn = pymysql.connect(
     host=os.environ.get("SQL_HOST"),
     user='menuHolder',
