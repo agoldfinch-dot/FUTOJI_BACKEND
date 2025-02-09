@@ -460,11 +460,11 @@ def get_Product_by_name(s: Union[str, None] = None):
 
 @app.get("/android/images/getById", tags=['images'])
 async def get_Product_by_id(q: Union[str, None] = None,  if_none_match: str | None = Header(default=None)):
-    if os.path.isfile(f"./img/{q}.webp"):
-        file_etag = await get_etag(f"./img/{q}.webp")
+    if os.path.isfile(f"./imgA/{q}.webp"):
+        file_etag = await get_etag(f"./imgA/{q}.webp")
         if if_none_match == file_etag:
             return Response(status_code=304)
-        f = open(f"./img/{q}.webp", "rb")
+        f = open(f"./imgA/{q}.webp", "rb")
         return Response(f.read(), media_type='image/webp', headers={"ETag": file_etag, "Cache-Control": "public, max-age=6048000"})
     link = mysqlA.get_image_by_child_id(q)
     if link == None:
@@ -472,17 +472,17 @@ async def get_Product_by_id(q: Union[str, None] = None,  if_none_match: str | No
     if link['Image'] == None:
         raise HTTPException(404, {'data': 'no such photo'})
     link = link['Image']
-    headers = {"X-SBISAccessToken": SBIS_KEY} 
+    headers = {"X-SBISAccessToken": SBIS_KEY_A} 
     response = requests.get(f"https://api.sbis.ru/retail{link}", headers=headers)
     img = PIL.Image.open(io.BytesIO(response.content)).convert('RGBA')
-    destination = f"./img/{q}.webp"
+    destination = f"./imgA/{q}.webp"
     try:
         img.save(destination, "WEBP", quality=80, optimize=True)
     except IOError:
         PIL.ImageFile.MAXBLOCK = img.size[0] * img.size[1]
         img.save(destination, "WEBP", quality=80, optimize=True)
-    f = open(f"./img/{q}.webp", "rb")
-    file_etag = await get_etag(f"./img/{q}.webp")
+    f = open(f"./imgA/{q}.webp", "rb")
+    file_etag = await get_etag(f"./imgA/{q}.webp")
     return Response(f.read(), media_type='image/webp', headers={"ETag": file_etag, "Cache-Control": "public, max-age=6048000"})
 
 @app.get("/images/getById", tags=['images'])
