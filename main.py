@@ -198,7 +198,7 @@ app.post('/android/orders/create', tags=['android'])
 async def create_orderA(order: Order):
     nomenclature = []
     for i in order.nomenclature:
-        nomenclature.append({"id": int(i['id']), "count":int(i['count']), "priceListId":49, 'modifiers': i.get("modifiers", None)})
+        nomenclature.append({"id": int(i['id']), "count":int(i['count']), "priceListId":53, 'modifiers': i.get("modifiers", None)})
     if order.adress != None:
         adrJ, adrF = get_adress("Владимирская обл., Собинский р-н., " +order.adress)
         address = order.adress

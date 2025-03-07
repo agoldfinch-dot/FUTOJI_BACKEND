@@ -8,7 +8,7 @@ def get_menu():
     url = 'https://api.sbis.ru/retail/nomenclature/list?'
     parameters = {
         'pointId': 250,
-        'priceListId': 49,
+        'priceListId': 53,
         "noStopList": True,
         'onlyPublished': True,
         'page': '0',
