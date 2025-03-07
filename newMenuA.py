@@ -102,7 +102,7 @@ def insert_dishes(cursor, dishes_by_category):
                 ingredients = description = mass = None
 
             cursor.execute("INSERT INTO Dishes (ParentId, ChildId, Name, Cost, Image, Description, Ingredients, Mass, HasMods) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                           (parent_id, dish_id, dish_name, dish_cost, dish_image, description, ingredients, mass, hasMods))
+                           (parent_id, dish_id, dish_name[:-2], dish_cost, dish_image, description, ingredients, mass, hasMods))
 
 # Подключение к базе данных
 conn = pymysql.connect(
