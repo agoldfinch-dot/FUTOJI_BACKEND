@@ -425,7 +425,7 @@ def get_Product_by_id(q: Union[str, None] = None):
 @app.get("/android/products/getById", tags=['products'])
 def get_Product_by_id(q: Union[str, None] = None):
     product = {}
-    products = get_dish_info_by_child_id(q)
+    products = mysqlA.get_dish_info_by_child_id(q)
     if products == None:
         raise HTTPException(404,{"error": "No such product"})
     mods = None
