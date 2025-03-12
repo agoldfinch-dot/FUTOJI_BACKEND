@@ -194,7 +194,7 @@ async def create_order(order: Order):
 
     return response.json()
 
-app.post('/android/orders/create', tags=['orders'])
+@app.post('/android/orders/create', tags=['orders'])
 async def create_orderA(order: Order):
     nomenclature = []
     for i in order.nomenclature:
