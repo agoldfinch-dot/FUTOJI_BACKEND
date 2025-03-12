@@ -24,7 +24,7 @@ from fastapi.responses import FileResponse, PlainTextResponse
 
 SBIS_KEY = os.environ.get("SBIS_KEY")
 SBIS_KEY_A = os.environ.get("SBIS_KEY_A")
-app = FastAPI(docs_url="", redoc_url="", openapi_url="")
+app = FastAPI()
 
 
 origins = ["*"]
@@ -221,7 +221,7 @@ async def create_orderA(order: Order):
         _time = order.time.split(':')
         hour = int(_time[0])
         minute = int(_time[1])
-    if hour * 60 + minute >= 1322:
+    if hour * 60 + minute >= 1230:
         raise HTTPException(400,{'data': 'Мы закрыты!'})
     if hour * 60 + minute < 600:
         raise HTTPException(400,{'data': 'Мы закрыты!'})
