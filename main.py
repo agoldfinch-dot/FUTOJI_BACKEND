@@ -157,7 +157,7 @@ async def create_order(order: Order):
         _time = order.time.split(':')
         hour = int(_time[0])
         minute = int(_time[1])
-    if hour * 60 + minute >= 1230:
+    if hour * 60 + minute >= 1322:
         raise HTTPException(400,{'data': 'Мы закрыты!'})
     if hour * 60 + minute < 600:
         raise HTTPException(400,{'data': 'Мы закрыты!'})
@@ -221,10 +221,10 @@ async def create_orderA(order: Order):
         _time = order.time.split(':')
         hour = int(_time[0])
         minute = int(_time[1])
-    if hour * 60 + minute >= 1230:
-        raise HTTPException(400,{'data': 'Мы закрыты!'})
-    if hour * 60 + minute < 600:
-        raise HTTPException(400,{'data': 'Мы закрыты!'})
+    # if hour * 60 + minute >= 1230:
+    #     raise HTTPException(400,{'data': 'Мы закрыты!'})
+    # if hour * 60 + minute < 600:
+        # raise HTTPException(400,{'data': 'Мы закрыты!'})
     prom = None
     if order.promo != None:
         prom = order.promo.lower()
