@@ -126,6 +126,23 @@ def get_delivery_price(q: Union[str, None] = None):
     adrJ, adrF = get_adress(q)
     return get_delivery(adrJ)
 
+@app.get('/order/address/get', tags=['orders'])
+def get_delivery_price(q: Union[str, None] = None):
+    headers = {
+        "X-SBISAccessToken": SBIS_KEY,
+    }  
+    parameters = {
+    'enteredAddress': q,
+    'pageSize': '5'
+    }
+    url = 'https://api.sbis.ru/retail/delivery/suggested-address?'  
+    response = requests.get(url, params=parameters, headers=headers)
+    try:
+        return response
+    except Exception:
+        raise HTTPException(400, "address not found")
+
+
 async def telegrammSend(id, message):
     bot = telebot.TeleBot(os.environ.get('TG_KEY'), parse_mode="HTML")
     bot.send_message(id, message)
