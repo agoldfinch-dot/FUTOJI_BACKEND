@@ -138,7 +138,7 @@ def get_delivery_price(q: Union[str, None] = None):
     url = 'https://api.sbis.ru/retail/delivery/suggested-address?'  
     response = requests.get(url, params=parameters, headers=headers)
     try:
-        return response
+        return response.json()
     except Exception:
         raise HTTPException(400, "address not found")
 
