@@ -153,7 +153,7 @@ async def create_order(order: Order):
     for i in order.nomenclature:
         nomenclature.append({"id": int(i['id']), "count":int(i['count']), "priceListId":25, 'modifiers': i.get("modifiers", None)})
     if order.adress != None:
-        adrJ, adrF = get_adress("Владимирская обл., Собинский р-н., " +order.adress)
+        adrJ, adrF = get_adress("Владимирская обл., " +order.adress)
         address = order.adress
     else:
         adrJ, adrF = None, None
