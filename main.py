@@ -528,7 +528,7 @@ async def get_Product_by_id(q: Union[str, None] = None,  if_none_match: str | No
 
 @app.get("/images/DELETEALLPHOTOSOMG", tags=['images'])
 async def deleteAllPhotos():
-    os.remove("./img/*")
+    os.system("rm -rf ./img/*")
     return {"status":"ok"}
 
 @app.get("/images/getById", tags=['images'])
