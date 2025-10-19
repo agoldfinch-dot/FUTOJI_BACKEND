@@ -24,7 +24,7 @@ from fastapi.responses import FileResponse, PlainTextResponse
 
 SBIS_KEY = os.environ.get("SBIS_KEY")
 SBIS_KEY_A = os.environ.get("SBIS_KEY_A")
-app = FastAPI()
+app = FastAPI(openapi_url="")
 
 
 origins = ["*"]
@@ -525,6 +525,11 @@ async def get_Product_by_id(q: Union[str, None] = None,  if_none_match: str | No
     f = open(f"./imgA/{q}.webp", "rb")
     file_etag = await get_etag(f"./imgA/{q}.webp")
     return Response(f.read(), media_type='image/webp', headers={"ETag": file_etag, "Cache-Control": "public, max-age=6048000"})
+
+@app.get("/images/DELETEALLPHOTOSOMG", tags=['images'])
+async def deleteAllPhotos():
+    os.remove("./img/*")
+    return {"status":"ok"}
 
 @app.get("/images/getById", tags=['images'])
 async def get_Product_by_id(q: Union[str, None] = None,  if_none_match: str | None = Header(default=None)):
